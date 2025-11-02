@@ -12,6 +12,10 @@ const DashboardPage = () => {
     navigate('/login');
   };
 
+  const handleBuyTokens = () => {
+    navigate('/purchase');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white shadow">
@@ -58,7 +62,7 @@ const DashboardPage = () => {
               
               <div className="border rounded-lg p-4">
                 <h3 className="font-medium text-gray-900 mb-2">Quick Actions</h3>
-                <Button fullWidth variant="secondary">
+                <Button fullWidth variant="secondary" onClick={handleBuyTokens}>
                   Buy Tokens
                 </Button>
               </div>
