@@ -1,7 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
+import { useAuth } from '../../context/AuthContext';
 import Button from '../../components/common/Button';
+import TradingChartFixed from '../../components/trading/TradingChartFixed';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -17,39 +18,20 @@ const DashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">
-              Welcome to Your Dashboard!
-            </h2>
-            <p className="text-gray-600 mb-6">
-              Your account has been set up successfully.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="border rounded-lg p-4">
-                <h3 className="font-medium text-gray-900 mb-2">Account Info</h3>
-                <p className="text-sm text-gray-600">Email: {user?.email}</p>
-                <p className="text-sm text-gray-600">Role: {user?.role}</p>
-              </div>
-              
-              <div className="border rounded-lg p-4">
-                <h3 className="font-medium text-gray-900 mb-2">Wallet Status</h3>
-                <p className="text-sm text-gray-600">
-                  {user?.walletAddress ? 'Connected' : 'Not Connected'}
-                </p>
-              </div>
-              
-              <div className="border rounded-lg p-4">
-                <h3 className="font-medium text-gray-900 mb-2">Quick Actions</h3>
-                <Button fullWidth variant="secondary" onClick={handleBuyTokens}>
-                  Buy Tokens
-                </Button>
-              </div>
-            </div>
+    <div className="min-h-screen bg-background-secondary">
+      <main className="container-premium py-6">
+        <div className="section-premium">
+          {/* Trading Chart Section */}
+          <div className="card-premium p-6">
+            <h3 className="title-section mb-6">
+              <span className="text-gradient">SOL/USD Trading Chart</span>
+            </h3>
+            <TradingChartFixed
+              symbol="SOL"
+              tokenMint="SOL"
+              height={500}
+              className="w-full"
+            />
           </div>
         </div>
       </main>

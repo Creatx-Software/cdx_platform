@@ -11,6 +11,7 @@ const webhookRoutes = require('./routes/webhook');
 const adminRoutes = require('./routes/admin');
 const transactionRoutes = require('./routes/transaction');
 const tokenRoutes = require('./routes/token');
+const priceHistoryRoutes = require('./routes/priceHistory');
 
 const app = express();
 
@@ -133,6 +134,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/token', tokenRoutes);
+app.use('/api/price-history', priceHistoryRoutes);
 
 // 404 handler
 app.use((req, res) => {

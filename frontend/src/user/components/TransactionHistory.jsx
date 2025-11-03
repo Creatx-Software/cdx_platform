@@ -10,7 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import transactionService from '../../services/transactionService';
-import Loader from '../common/Loader';
+import Loader from '../../components/common/Loader';
 import TransactionDetailsModal from './TransactionDetailsModal';
 
 const TransactionHistory = () => {

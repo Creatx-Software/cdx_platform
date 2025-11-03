@@ -299,6 +299,66 @@ const authController = {
     }
   },
 
+  // Change password
+  changePassword: async (req, res, next) => {
+    try {
+      const { current_password, new_password } = req.body;
+      const userId = req.userId;
+
+      // Get user details
+      const user = await User.findUserById(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          error: 'User not found'
+        });
+      }
+
+      // Verify current password
+      const isValidPassword = await comparePassword(current_password, user.password_hash);
+      if (!isValidPassword) {
+        return res.status(400).json({
+          success: false,
+          error: 'Current password is incorrect'
+        });
+      }
+
+      // Validate new password
+      const passwordCheck = validatePassword(new_password);
+      if (!passwordCheck.valid) {
+        const errors = Object.values(passwordCheck.errors).filter(e => e !== null);
+        return res.status(400).json({
+          success: false,
+          error: 'Password requirements not met',
+          details: errors
+        });
+      }
+
+      // Check if new password is different from current
+      const isSamePassword = await comparePassword(new_password, user.password_hash);
+      if (isSamePassword) {
+        return res.status(400).json({
+          success: false,
+          error: 'New password must be different from current password'
+        });
+      }
+
+      // Update password
+      await User.updatePassword(userId, new_password);
+
+      logger.info(`Password changed for user: ${user.email}`);
+
+      res.json({
+        success: true,
+        message: 'Password changed successfully'
+      });
+
+    } catch (error) {
+      logger.error('Change password error:', error);
+      next(error);
+    }
+  },
+
   // Logout (optional - mainly for session cleanup)
   logout: async (req, res, next) => {
     try {

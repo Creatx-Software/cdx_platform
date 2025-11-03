@@ -9,7 +9,7 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import transactionService from '../../services/transactionService';
-import Loader from '../common/Loader';
+import Loader from '../../components/common/Loader';
 
 const TransactionDetailsModal = ({ isOpen, onClose, transactionId }) => {
   const [transaction, setTransaction] = useState(null);

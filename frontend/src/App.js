@@ -20,7 +20,7 @@ import AdminPage from './admin/pages/AdminPage';
 
 // Components
 import PurchaseSuccess from './components/payment/PurchaseSuccess';
-import TransactionHistory from './components/user/TransactionHistory';
+import TransactionHistory from './user/components/TransactionHistory';
 
 function App() {
   return (

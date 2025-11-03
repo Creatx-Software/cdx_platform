@@ -5,7 +5,9 @@
       "Bash(curl:*)",
       "Bash(mysql:*)",
       "Bash(node:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(npm install:*)"
     ],
     "deny": [],
     "ask": []

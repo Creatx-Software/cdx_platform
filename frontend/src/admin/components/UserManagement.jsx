@@ -10,7 +10,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
-import adminService from '../services/adminService';
+import adminService from '../../services/adminService';
 import Loader from '../../components/common/Loader';
 
 const UserManagement = () => {
