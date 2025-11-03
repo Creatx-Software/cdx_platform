@@ -41,8 +41,14 @@ const LoginForm = () => {
     setErrors({});
 
     try {
-      await loginUser(formData.email, formData.password);
-      navigate('/dashboard');
+      const result = await loginUser(formData.email, formData.password);
+
+      // Role-based redirection
+      if (result.user.role === 'ADMIN') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       setErrors({
         submit: error.response?.data?.error || 'Login failed. Please try again.'

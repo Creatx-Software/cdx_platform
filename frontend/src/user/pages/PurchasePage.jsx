@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import TokenPurchase from '../components/payment/TokenPurchase';
-import useAuth from '../hooks/useAuth';
-import Button from '../components/common/Button';
+import TokenPurchase from '../../components/payment/TokenPurchase';
+import useAuth from '../../hooks/useAuth';
+import Button from '../../components/common/Button';
 
 const PurchasePage = () => {
   const navigate = useNavigate();
@@ -19,30 +19,6 @@ const PurchasePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Navigation */}
-      <nav className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex items-center">
-              <button
-                onClick={handleBackToDashboard}
-                className="text-blue-600 hover:text-blue-500 mr-4"
-              >
-                ê Back to Dashboard
-              </button>
-              <h1 className="text-xl font-bold text-gray-900">CDX Platform</h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                {user?.firstName} {user?.lastName}
-              </span>
-              <Button onClick={handleLogout} variant="secondary">
-                Logout
-              </Button>
-            </div>
-          </div>
-        </div>
-      </nav>
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">

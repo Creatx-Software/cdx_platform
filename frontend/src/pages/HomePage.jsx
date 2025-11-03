@@ -1,9 +1,17 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import Button from '../components/common/Button';
+import Loader from '../components/common/Loader';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { user, loading, isAuthenticated } = useAuth();
+
+  // Show loading while checking authentication
+  if (loading) {
+    return <Loader message="Loading..." />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-white">
@@ -15,14 +23,42 @@ const HomePage = () => {
           <p className="text-xl text-gray-600 mb-8">
             Buy cryptocurrency tokens with your credit card
           </p>
-          
+
+          {/* Show different buttons based on auth status and role */}
           <div className="flex justify-center space-x-4 mb-12">
-            <Button onClick={() => navigate('/register')}>
-              Get Started
-            </Button>
-            <Button onClick={() => navigate('/login')} variant="secondary">
-              Sign In
-            </Button>
+            {isAuthenticated ? (
+              user?.role === 'ADMIN' ? (
+                /* Admin buttons */
+                <>
+                  <Button onClick={() => navigate('/admin')}>
+                    Go to Admin Panel
+                  </Button>
+                  <Button onClick={() => navigate('/')} variant="outline">
+                    Back to Home
+                  </Button>
+                </>
+              ) : (
+                /* User buttons */
+                <>
+                  <Button onClick={() => navigate('/dashboard')}>
+                    Go to Dashboard
+                  </Button>
+                  <Button onClick={() => navigate('/purchase')} variant="secondary">
+                    Buy Tokens
+                  </Button>
+                </>
+              )
+            ) : (
+              /* Guest buttons */
+              <>
+                <Button onClick={() => navigate('/register')}>
+                  Get Started
+                </Button>
+                <Button onClick={() => navigate('/login')} variant="secondary">
+                  Sign In
+                </Button>
+              </>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">

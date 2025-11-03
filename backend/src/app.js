@@ -8,6 +8,9 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const paymentRoutes = require('./routes/payment');
 const webhookRoutes = require('./routes/webhook');
+const adminRoutes = require('./routes/admin');
+const transactionRoutes = require('./routes/transaction');
+const tokenRoutes = require('./routes/token');
 
 const app = express();
 
@@ -127,6 +130,9 @@ app.get('/api/test/solana', async (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/transactions', transactionRoutes);
+app.use('/api/token', tokenRoutes);
 
 // 404 handler
 app.use((req, res) => {

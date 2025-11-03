@@ -1,7 +1,16 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import authService from '../services/authService';
 
 export const AuthContext = createContext();
+
+// Custom hook to use the AuthContext
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -11,14 +20,19 @@ export const AuthProvider = ({ children }) => {
   // Check for existing session on mount
   useEffect(() => {
     const initAuth = () => {
-      const storedUser = authService.getCurrentUser();
-      const storedToken = authService.getToken();
-      
-      if (storedUser && storedToken) {
+      // Validate session (checks token expiration)
+      if (authService.validateSession()) {
+        const storedUser = authService.getCurrentUser();
+        const storedToken = authService.getToken();
+
         setUser(storedUser);
         setToken(storedToken);
+      } else {
+        // Clear invalid/expired session
+        setUser(null);
+        setToken(null);
       }
-      
+
       setLoading(false);
     };
 

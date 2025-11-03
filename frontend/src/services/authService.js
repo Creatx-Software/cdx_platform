@@ -61,9 +61,54 @@ const authService = {
     return localStorage.getItem('token');
   },
 
-  // Check if authenticated
+  // Check if token is expired
+  isTokenExpired: (token) => {
+    if (!token) return true;
+
+    try {
+      // Decode JWT token (simple base64 decode of payload)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const currentTime = Date.now() / 1000;
+
+      return payload.exp < currentTime;
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      return true; // Treat invalid tokens as expired
+    }
+  },
+
+  // Check if authenticated and token is valid
   isAuthenticated: () => {
-    return !!localStorage.getItem('token');
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+
+    // Check if token is expired
+    if (authService.isTokenExpired(token)) {
+      // Auto-logout if token is expired
+      authService.logout();
+      return false;
+    }
+
+    return true;
+  },
+
+  // Validate current session
+  validateSession: () => {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+
+    if (!token || !user) {
+      return false;
+    }
+
+    if (authService.isTokenExpired(token)) {
+      // Clear expired session
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return false;
+    }
+
+    return true;
   }
 };
 

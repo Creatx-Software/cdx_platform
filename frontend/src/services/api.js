@@ -8,13 +8,43 @@ const api = axios.create({
   }
 });
 
-// Request interceptor - add token to requests
+// Request interceptor - add token to requests and validate expiration
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Check if token is expired before making the request
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const currentTime = Date.now() / 1000;
+
+        if (payload.exp < currentTime) {
+          // Token is expired, clear storage and redirect to login
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          return Promise.reject(new Error('Token expired'));
+        }
+
+        config.headers.Authorization = `Bearer ${token}`;
+      } catch (error) {
+        // Invalid token format, clear storage and redirect
+        console.error('Invalid token format:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+        return Promise.reject(new Error('Invalid token'));
+      }
     }
+
+    // Debug: Log the full URL being requested
+    console.log('🚀 API Request:', {
+      baseURL: config.baseURL,
+      url: config.url,
+      fullURL: config.baseURL + config.url,
+      method: config.method.toUpperCase()
+    });
+
     return config;
   },
   (error) => {

@@ -59,15 +59,24 @@ const paymentController = {
         });
       }
 
-      // Get current token price
+      // Get current token configuration and check if sale is active
       const tokenConfig = await query(
-        'SELECT price_per_token FROM token_configuration WHERE is_active = TRUE'
+        'SELECT price_per_token, is_active FROM token_configuration ORDER BY created_at DESC LIMIT 1'
       );
 
       if (!tokenConfig.length) {
         return res.status(500).json({
           success: false,
           error: 'Token configuration not found'
+        });
+      }
+
+      // Check if token sale is active
+      if (!tokenConfig[0].is_active) {
+        return res.status(400).json({
+          success: false,
+          error: 'Token sale is currently inactive. Please try again later or contact support for more information.',
+          code: 'SALE_INACTIVE'
         });
       }
 

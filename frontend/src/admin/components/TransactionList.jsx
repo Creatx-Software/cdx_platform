@@ -2,21 +2,22 @@ import React, { useState, useEffect } from 'react';
 import {
   MagnifyingGlassIcon,
   AdjustmentsHorizontalIcon,
+  EyeIcon,
   ArrowPathIcon,
   DocumentArrowDownIcon,
-  EyeIcon,
+  ExclamationTriangleIcon,
   ChevronLeftIcon,
   ChevronRightIcon
 } from '@heroicons/react/24/outline';
-import api from '../../services/api';
-import transactionService from '../../services/transactionService';
-import Loader from '../common/Loader';
-import TransactionDetailsModal from './TransactionDetailsModal';
+import adminService from '../services/adminService';
+import Loader from '../../components/common/Loader';
 
-const TransactionHistory = () => {
+const TransactionList = () => {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [showTransactionModal, setShowTransactionModal] = useState(false);
   const [pagination, setPagination] = useState({
     current_page: 1,
     total_pages: 1,
@@ -30,13 +31,10 @@ const TransactionHistory = () => {
     status: 'all',
     start_date: '',
     end_date: '',
-    search: ''
+    search: '',
+    user_id: ''
   });
   const [showFilters, setShowFilters] = useState(false);
-
-  // Modal state
-  const [selectedTransactionId, setSelectedTransactionId] = useState(null);
-  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchTransactions();
@@ -47,23 +45,76 @@ const TransactionHistory = () => {
       setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams({
-        page: pagination.current_page.toString(),
-        limit: '10',
-        ...Object.fromEntries(Object.entries(filters).filter(([_, value]) => value))
-      });
+      const params = {
+        page: pagination.current_page,
+        limit: 20,
+        ...Object.fromEntries(Object.entries(filters).filter(([_, value]) => value && value !== 'all'))
+      };
 
-      const response = await api.get(`/api/transactions?${params}`);
+      const response = await adminService.getTransactions(params);
 
-      if (response.data.success) {
-        setTransactions(response.data.transactions);
-        setPagination(response.data.pagination);
+      if (response.success) {
+        setTransactions(response.transactions);
+        setPagination(response.pagination);
       }
     } catch (err) {
       console.error('Error fetching transactions:', err);
       setError('Failed to load transactions');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchTransactionDetails = async (transactionId) => {
+    try {
+      // Since we have full transaction data in the list, we can use it directly
+      // In a real implementation, you might want to fetch additional details
+      const transaction = transactions.find(t => t.id === transactionId);
+      if (transaction) {
+        setSelectedTransaction(transaction);
+        setShowTransactionModal(true);
+      }
+    } catch (err) {
+      console.error('Error fetching transaction details:', err);
+      setError('Failed to load transaction details');
+    }
+  };
+
+  const retryTransaction = async (transactionId) => {
+    try {
+      // This would call an admin API to retry a failed transaction
+      const response = await adminService.retryTransaction(transactionId);
+      if (response.success) {
+        fetchTransactions(); // Refresh the list
+      }
+    } catch (err) {
+      console.error('Error retrying transaction:', err);
+      setError('Failed to retry transaction');
+    }
+  };
+
+  const exportTransactions = async () => {
+    try {
+      const params = {
+        format: 'csv',
+        ...Object.fromEntries(Object.entries(filters).filter(([_, value]) => value && value !== 'all'))
+      };
+
+      // This would call the admin export endpoint
+      const response = await adminService.exportTransactions(params);
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `admin_transactions_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error exporting transactions:', err);
+      setError('Failed to export transactions');
     }
   };
 
@@ -77,42 +128,6 @@ const TransactionHistory = () => {
 
   const handlePageChange = (newPage) => {
     setPagination(prev => ({ ...prev, current_page: newPage }));
-  };
-
-  const exportTransactions = async () => {
-    try {
-      const params = new URLSearchParams({
-        format: 'csv',
-        ...Object.fromEntries(Object.entries(filters).filter(([_, value]) => value))
-      });
-
-      const response = await transactionService.exportTransactions(
-        Object.fromEntries(Object.entries(filters).filter(([_, value]) => value))
-      );
-
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `transactions_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Error exporting transactions:', err);
-      setError('Failed to export transactions');
-    }
-  };
-
-  const handleViewTransaction = (transactionId) => {
-    setSelectedTransactionId(transactionId);
-    setShowModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedTransactionId(null);
   };
 
   const getStatusBadge = (status) => {
@@ -134,11 +149,11 @@ const TransactionHistory = () => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD'
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const formatNumber = (number) => {
-    return new Intl.NumberFormat('en-US').format(number);
+    return new Intl.NumberFormat('en-US').format(number || 0);
   };
 
   const formatDate = (dateString) => {
@@ -156,7 +171,8 @@ const TransactionHistory = () => {
       status: 'all',
       start_date: '',
       end_date: '',
-      search: ''
+      search: '',
+      user_id: ''
     });
   };
 
@@ -165,9 +181,9 @@ const TransactionHistory = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Transaction History</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Transaction Management</h1>
           <p className="text-gray-600 mt-1">
-            View and manage all your CDX token purchases
+            Monitor and manage all platform transactions
           </p>
         </div>
         <div className="flex space-x-2">
@@ -198,7 +214,7 @@ const TransactionHistory = () => {
       {/* Filters Panel */}
       {showFilters && (
         <div className="bg-white border border-gray-200 rounded-lg p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Status
@@ -239,13 +255,25 @@ const TransactionHistory = () => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
+                User ID
+              </label>
+              <input
+                type="text"
+                placeholder="Enter user ID"
+                value={filters.user_id}
+                onChange={(e) => handleFilterChange('user_id', e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Search
               </label>
               <div className="relative">
                 <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Transaction ID, Amount..."
+                  placeholder="Transaction ID, email, wallet address..."
                   value={filters.search}
                   onChange={(e) => handleFilterChange('search', e.target.value)}
                   className="w-full border border-gray-300 rounded-md pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -279,20 +307,24 @@ const TransactionHistory = () => {
           </div>
         ) : transactions.length === 0 ? (
           <div className="p-8 text-center">
+            <ExclamationTriangleIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500">No transactions found</p>
             <p className="text-sm text-gray-400 mt-1">
-              Transactions will appear here after you make your first purchase
+              Transactions will appear here as users make purchases
             </p>
           </div>
         ) : (
           <>
             {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden lg:block overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Transaction
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      User
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Amount
@@ -319,11 +351,21 @@ const TransactionHistory = () => {
                           <div className="font-mono text-sm font-medium text-gray-900">
                             #{transaction.id}
                           </div>
-                          {transaction.solana_transaction_signature && (
+                          {transaction.stripe_payment_intent_id && (
                             <div className="text-xs text-gray-500">
-                              Solana: {transaction.solana_transaction_signature.slice(0, 8)}...
+                              Stripe: {transaction.stripe_payment_intent_id.slice(0, 12)}...
                             </div>
                           )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div>
+                          <div className="text-sm font-medium text-gray-900">
+                            {transaction.user_email || `User #${transaction.user_id}`}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            ID: {transaction.user_id}
+                          </div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -339,13 +381,24 @@ const TransactionHistory = () => {
                         {formatDate(transaction.created_at)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <button
-                          onClick={() => handleViewTransaction(transaction.id)}
-                          className="text-blue-600 hover:text-blue-900 flex items-center"
-                        >
-                          <EyeIcon className="w-4 h-4 mr-1" />
-                          View
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => fetchTransactionDetails(transaction.id)}
+                            className="text-blue-600 hover:text-blue-900 flex items-center"
+                          >
+                            <EyeIcon className="w-4 h-4 mr-1" />
+                            View
+                          </button>
+                          {transaction.status === 'failed' && (
+                            <button
+                              onClick={() => retryTransaction(transaction.id)}
+                              className="text-green-600 hover:text-green-900 flex items-center"
+                            >
+                              <ArrowPathIcon className="w-4 h-4 mr-1" />
+                              Retry
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -354,21 +407,24 @@ const TransactionHistory = () => {
             </div>
 
             {/* Mobile Cards */}
-            <div className="md:hidden">
+            <div className="lg:hidden">
               {transactions.map((transaction) => (
                 <div key={transaction.id} className="border-b border-gray-200 p-4">
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="flex justify-between items-start mb-3">
                     <div>
                       <p className="font-mono text-sm font-medium text-gray-900">
                         #{transaction.id}
                       </p>
                       <p className="text-sm text-gray-500">
+                        {transaction.user_email || `User #${transaction.user_id}`}
+                      </p>
+                      <p className="text-xs text-gray-400">
                         {formatDate(transaction.created_at)}
                       </p>
                     </div>
                     {getStatusBadge(transaction.status)}
                   </div>
-                  <div className="grid grid-cols-2 gap-4 mt-3">
+                  <div className="grid grid-cols-2 gap-4 mb-3">
                     <div>
                       <p className="text-xs text-gray-500">Amount</p>
                       <p className="font-semibold">{formatCurrency(transaction.amount_usd)}</p>
@@ -378,14 +434,23 @@ const TransactionHistory = () => {
                       <p className="font-semibold">{formatNumber(transaction.token_amount)} CDX</p>
                     </div>
                   </div>
-                  <div className="mt-3">
+                  <div className="flex space-x-3">
                     <button
-                      onClick={() => handleViewTransaction(transaction.id)}
+                      onClick={() => fetchTransactionDetails(transaction.id)}
                       className="text-blue-600 hover:text-blue-900 text-sm flex items-center"
                     >
                       <EyeIcon className="w-4 h-4 mr-1" />
                       View Details
                     </button>
+                    {transaction.status === 'failed' && (
+                      <button
+                        onClick={() => retryTransaction(transaction.id)}
+                        className="text-green-600 hover:text-green-900 text-sm flex items-center"
+                      >
+                        <ArrowPathIcon className="w-4 h-4 mr-1" />
+                        Retry
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -446,14 +511,129 @@ const TransactionHistory = () => {
         )}
       </div>
 
-      {/* Transaction Details Modal */}
-      <TransactionDetailsModal
-        isOpen={showModal}
-        onClose={handleCloseModal}
-        transactionId={selectedTransactionId}
-      />
+      {/* Transaction Detail Modal */}
+      {showTransactionModal && selectedTransaction && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Transaction Details</h3>
+                <button
+                  onClick={() => setShowTransactionModal(false)}
+                  className="text-gray-400 hover:text-gray-600 text-2xl"
+                >
+                  �
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Transaction Info */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900">Transaction Information</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">Transaction ID</p>
+                      <p className="font-mono font-medium">#{selectedTransaction.id}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Status</p>
+                      {getStatusBadge(selectedTransaction.status)}
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Amount (USD)</p>
+                      <p className="font-medium">{formatCurrency(selectedTransaction.amount_usd)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">CDX Tokens</p>
+                      <p className="font-medium">{formatNumber(selectedTransaction.token_amount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Token Price</p>
+                      <p className="font-medium">{formatCurrency(selectedTransaction.token_price_at_purchase)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Created</p>
+                      <p className="font-medium">{formatDate(selectedTransaction.created_at)}</p>
+                    </div>
+                    {selectedTransaction.completed_at && (
+                      <div>
+                        <p className="text-sm text-gray-500">Completed</p>
+                        <p className="font-medium">{formatDate(selectedTransaction.completed_at)}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Payment & Blockchain Info */}
+                <div className="space-y-4">
+                  <h4 className="font-medium text-gray-900">Payment & Blockchain</h4>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-500">User</p>
+                      <p className="font-medium">{selectedTransaction.user_email || `User #${selectedTransaction.user_id}`}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Recipient Wallet</p>
+                      <p className="font-mono text-sm break-all">{selectedTransaction.recipient_wallet_address}</p>
+                    </div>
+                    {selectedTransaction.stripe_payment_intent_id && (
+                      <div>
+                        <p className="text-sm text-gray-500">Stripe Payment Intent</p>
+                        <p className="font-mono text-sm">{selectedTransaction.stripe_payment_intent_id}</p>
+                      </div>
+                    )}
+                    {selectedTransaction.solana_transaction_signature && (
+                      <div>
+                        <p className="text-sm text-gray-500">Solana Transaction</p>
+                        <div className="flex items-center space-x-2">
+                          <p className="font-mono text-sm break-all">{selectedTransaction.solana_transaction_signature}</p>
+                          <a
+                            href={`https://explorer.solana.com/tx/${selectedTransaction.solana_transaction_signature}?cluster=devnet`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 text-xs whitespace-nowrap"
+                          >
+                            View on Explorer
+                          </a>
+                        </div>
+                      </div>
+                    )}
+                    {selectedTransaction.error_message && (
+                      <div>
+                        <p className="text-sm text-gray-500">Error Message</p>
+                        <p className="text-red-600 text-sm">{selectedTransaction.error_message}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 flex justify-end space-x-3">
+                {selectedTransaction.status === 'failed' && (
+                  <button
+                    onClick={() => {
+                      retryTransaction(selectedTransaction.id);
+                      setShowTransactionModal(false);
+                    }}
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700"
+                  >
+                    Retry Transaction
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowTransactionModal(false)}
+                  className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default TransactionHistory;
+export default TransactionList;
