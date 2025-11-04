@@ -76,9 +76,9 @@ export const PaymentForm = ({
       // Create payment intent on backend
       const token = localStorage.getItem('token');
       console.log('🔐 Auth token:', token ? 'Present' : 'Missing');
-      console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL}/api/payment/create-intent`);
+      console.log('🔗 API URL:', `${process.env.REACT_APP_API_URL}/payment/create-intent`);
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/payment/create-intent`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/payment/create-intent`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

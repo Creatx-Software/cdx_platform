@@ -43,7 +43,7 @@ const Profile = () => {
   const fetchUserStats = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/transactions/stats');
+      const response = await api.get('/transactions/stats');
 
       if (response.data.success) {
         setUserStats(response.data.stats);
@@ -71,7 +71,7 @@ const Profile = () => {
     setSuccess(null);
 
     try {
-      const response = await api.put('/api/user/profile', formData);
+      const response = await api.put('/user/profile', formData);
 
       if (response.data.success) {
         setSuccess('Profile updated successfully');

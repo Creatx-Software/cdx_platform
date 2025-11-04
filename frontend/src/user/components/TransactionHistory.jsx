@@ -53,7 +53,7 @@ const TransactionHistory = () => {
         ...Object.fromEntries(Object.entries(filters).filter(([_, value]) => value))
       });
 
-      const response = await api.get(`/api/transactions?${params}`);
+      const response = await api.get(`/transactions?${params}`);
 
       if (response.data.success) {
         setTransactions(response.data.transactions);

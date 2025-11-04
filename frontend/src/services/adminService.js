@@ -4,7 +4,7 @@ class AdminService {
   // Dashboard Statistics
   async getDashboardStats() {
     try {
-      const response = await api.get('/api/admin/dashboard/stats');
+      const response = await api.get('/admin/dashboard/stats');
       return response.data;
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -16,7 +16,7 @@ class AdminService {
   async getUsers(params = {}) {
     try {
       const queryParams = new URLSearchParams(params).toString();
-      const response = await api.get(`/api/admin/users?${queryParams}`);
+      const response = await api.get(`/admin/users?${queryParams}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -26,7 +26,7 @@ class AdminService {
 
   async getUserDetails(userId) {
     try {
-      const response = await api.get(`/api/admin/users/${userId}`);
+      const response = await api.get(`/admin/users/${userId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching user details:', error);
@@ -38,7 +38,7 @@ class AdminService {
   async getTransactions(params = {}) {
     try {
       const queryParams = new URLSearchParams(params).toString();
-      const response = await api.get(`/api/admin/transactions?${queryParams}`);
+      const response = await api.get(`/admin/transactions?${queryParams}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -48,7 +48,7 @@ class AdminService {
 
   async getTransactionDetails(transactionId) {
     try {
-      const response = await api.get(`/api/admin/transactions/${transactionId}`);
+      const response = await api.get(`/admin/transactions/${transactionId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching transaction details:', error);
@@ -58,7 +58,7 @@ class AdminService {
 
   async retryTransaction(transactionId) {
     try {
-      const response = await api.post(`/api/admin/transactions/${transactionId}/retry`);
+      const response = await api.post(`/admin/transactions/${transactionId}/retry`);
       return response.data;
     } catch (error) {
       console.error('Error retrying transaction:', error);
@@ -69,7 +69,7 @@ class AdminService {
   async exportTransactions(params = {}) {
     try {
       const queryParams = new URLSearchParams(params).toString();
-      const response = await api.get(`/api/admin/transactions/export?${queryParams}`, {
+      const response = await api.get(`/admin/transactions/export?${queryParams}`, {
         responseType: 'blob'
       });
       return response;
@@ -82,7 +82,7 @@ class AdminService {
   // Token Configuration
   async getTokenConfig() {
     try {
-      const response = await api.get('/api/admin/token-config');
+      const response = await api.get('/admin/token-config');
       return response.data;
     } catch (error) {
       console.error('Error fetching token config:', error);
@@ -92,7 +92,7 @@ class AdminService {
 
   async updateTokenConfig(config) {
     try {
-      const response = await api.put('/api/admin/token-config', config);
+      const response = await api.put('/admin/token-config', config);
       return response.data;
     } catch (error) {
       console.error('Error updating token config:', error);
@@ -103,7 +103,7 @@ class AdminService {
   // Wallet Management
   async getWalletBalance(walletAddress) {
     try {
-      const response = await api.get(`/api/admin/wallet-balance/${walletAddress}`);
+      const response = await api.get(`/admin/wallet-balance/${walletAddress}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching wallet balance:', error);
@@ -114,7 +114,7 @@ class AdminService {
   // System Operations
   async getSystemHealth() {
     try {
-      const response = await api.get('/api/admin/system/health');
+      const response = await api.get('/admin/system/health');
       return response.data;
     } catch (error) {
       console.error('Error fetching system health:', error);
@@ -124,7 +124,7 @@ class AdminService {
 
   async refreshSystemCache() {
     try {
-      const response = await api.post('/api/admin/system/refresh-cache');
+      const response = await api.post('/admin/system/refresh-cache');
       return response.data;
     } catch (error) {
       console.error('Error refreshing system cache:', error);
@@ -135,7 +135,7 @@ class AdminService {
   // Analytics and Reports
   async getAnalytics(timeRange = '7d') {
     try {
-      const response = await api.get(`/api/admin/analytics?range=${timeRange}`);
+      const response = await api.get(`/admin/analytics?range=${timeRange}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -146,7 +146,7 @@ class AdminService {
   async generateReport(type, params = {}) {
     try {
       const queryParams = new URLSearchParams({ type, ...params }).toString();
-      const response = await api.get(`/api/admin/reports?${queryParams}`, {
+      const response = await api.get(`/admin/reports?${queryParams}`, {
         responseType: 'blob'
       });
       return response;
@@ -159,7 +159,7 @@ class AdminService {
   // User Actions
   async updateUserStatus(userId, status) {
     try {
-      const response = await api.put(`/api/admin/users/${userId}/status`, { status });
+      const response = await api.put(`/admin/users/${userId}/status`, { status });
       return response.data;
     } catch (error) {
       console.error('Error updating user status:', error);
@@ -169,7 +169,7 @@ class AdminService {
 
   async sendUserNotification(userId, notification) {
     try {
-      const response = await api.post(`/api/admin/users/${userId}/notify`, notification);
+      const response = await api.post(`/admin/users/${userId}/notify`, notification);
       return response.data;
     } catch (error) {
       console.error('Error sending user notification:', error);
@@ -180,7 +180,7 @@ class AdminService {
   // Transaction Actions
   async updateTransactionStatus(transactionId, status, notes = '') {
     try {
-      const response = await api.put(`/api/admin/transactions/${transactionId}/status`, {
+      const response = await api.put(`/admin/transactions/${transactionId}/status`, {
         status,
         notes
       });
@@ -193,7 +193,7 @@ class AdminService {
 
   async refundTransaction(transactionId, reason = '') {
     try {
-      const response = await api.post(`/api/admin/transactions/${transactionId}/refund`, {
+      const response = await api.post(`/admin/transactions/${transactionId}/refund`, {
         reason
       });
       return response.data;
@@ -206,7 +206,7 @@ class AdminService {
   // Settings Management
   async getSystemSettings() {
     try {
-      const response = await api.get('/api/admin/settings');
+      const response = await api.get('/admin/settings');
       return response.data;
     } catch (error) {
       console.error('Error fetching system settings:', error);
@@ -216,7 +216,7 @@ class AdminService {
 
   async updateSystemSettings(settings) {
     try {
-      const response = await api.put('/api/admin/settings', settings);
+      const response = await api.put('/admin/settings', settings);
       return response.data;
     } catch (error) {
       console.error('Error updating system settings:', error);
@@ -228,7 +228,7 @@ class AdminService {
   async getAuditLogs(params = {}) {
     try {
       const queryParams = new URLSearchParams(params).toString();
-      const response = await api.get(`/api/admin/audit-logs?${queryParams}`);
+      const response = await api.get(`/admin/audit-logs?${queryParams}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching audit logs:', error);
@@ -240,7 +240,7 @@ class AdminService {
   async getSecurityEvents(params = {}) {
     try {
       const queryParams = new URLSearchParams(params).toString();
-      const response = await api.get(`/api/admin/security/events?${queryParams}`);
+      const response = await api.get(`/admin/security/events?${queryParams}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching security events:', error);
@@ -250,7 +250,7 @@ class AdminService {
 
   async blockIPAddress(ipAddress, reason = '') {
     try {
-      const response = await api.post('/api/admin/security/block-ip', {
+      const response = await api.post('/admin/security/block-ip', {
         ip_address: ipAddress,
         reason
       });
@@ -263,7 +263,7 @@ class AdminService {
 
   async unblockIPAddress(ipAddress) {
     try {
-      const response = await api.delete(`/api/admin/security/block-ip/${ipAddress}`);
+      const response = await api.delete(`/admin/security/block-ip/${ipAddress}`);
       return response.data;
     } catch (error) {
       console.error('Error unblocking IP address:', error);
@@ -274,7 +274,7 @@ class AdminService {
   // Monitoring
   async getServerMetrics() {
     try {
-      const response = await api.get('/api/admin/monitoring/metrics');
+      const response = await api.get('/admin/monitoring/metrics');
       return response.data;
     } catch (error) {
       console.error('Error fetching server metrics:', error);
@@ -285,7 +285,7 @@ class AdminService {
   async getErrorLogs(params = {}) {
     try {
       const queryParams = new URLSearchParams(params).toString();
-      const response = await api.get(`/api/admin/monitoring/errors?${queryParams}`);
+      const response = await api.get(`/admin/monitoring/errors?${queryParams}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching error logs:', error);

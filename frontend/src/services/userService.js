@@ -4,7 +4,7 @@ const userService = {
   // Get user profile
   getProfile: async () => {
     try {
-      const response = await api.get('/api/user/profile');
+      const response = await api.get('/user/profile');
       return response.data;
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -15,7 +15,7 @@ const userService = {
   // Update user profile
   updateProfile: async (profileData) => {
     try {
-      const response = await api.put('/api/user/profile', profileData);
+      const response = await api.put('/user/profile', profileData);
       return response.data;
     } catch (error) {
       console.error('Error updating user profile:', error);
@@ -26,7 +26,7 @@ const userService = {
   // Change password
   changePassword: async (currentPassword, newPassword) => {
     try {
-      const response = await api.post('/api/auth/change-password', {
+      const response = await api.post('/auth/change-password', {
         current_password: currentPassword,
         new_password: newPassword
       });
@@ -40,7 +40,7 @@ const userService = {
   // Get user statistics
   getStats: async () => {
     try {
-      const response = await api.get('/api/transactions/stats');
+      const response = await api.get('/transactions/stats');
       return response.data;
     } catch (error) {
       console.error('Error fetching user stats:', error);
@@ -51,7 +51,7 @@ const userService = {
   // Update user settings
   updateSettings: async (settings) => {
     try {
-      const response = await api.put('/api/user/settings', settings);
+      const response = await api.put('/user/settings', settings);
       return response.data;
     } catch (error) {
       console.error('Error updating user settings:', error);
@@ -62,7 +62,7 @@ const userService = {
   // Get user notifications
   getNotifications: async (params = {}) => {
     try {
-      const response = await api.get('/api/user/notifications', { params });
+      const response = await api.get('/user/notifications', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -73,7 +73,7 @@ const userService = {
   // Mark notification as read
   markNotificationRead: async (notificationId) => {
     try {
-      const response = await api.put(`/api/user/notifications/${notificationId}/read`);
+      const response = await api.put(`/user/notifications/${notificationId}/read`);
       return response.data;
     } catch (error) {
       console.error('Error marking notification as read:', error);

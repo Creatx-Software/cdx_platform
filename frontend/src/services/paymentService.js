@@ -4,7 +4,7 @@ const paymentService = {
   // Create payment intent for token purchase
   createPaymentIntent: async (paymentData) => {
     try {
-      const response = await api.post('/api/payments/create-intent', paymentData);
+      const response = await api.post('/payments/create-intent', paymentData);
       return response.data;
     } catch (error) {
       console.error('Error creating payment intent:', error);
@@ -15,7 +15,7 @@ const paymentService = {
   // Confirm payment
   confirmPayment: async (paymentIntentId, paymentMethodId) => {
     try {
-      const response = await api.post('/api/payments/confirm', {
+      const response = await api.post('/payments/confirm', {
         payment_intent_id: paymentIntentId,
         payment_method_id: paymentMethodId
       });
@@ -29,7 +29,7 @@ const paymentService = {
   // Get payment status
   getPaymentStatus: async (paymentIntentId) => {
     try {
-      const response = await api.get(`/api/payments/status/${paymentIntentId}`);
+      const response = await api.get(`/payments/status/${paymentIntentId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching payment status:', error);
@@ -40,7 +40,7 @@ const paymentService = {
   // Get token pricing
   getTokenPricing: async () => {
     try {
-      const response = await api.get('/api/payments/token-pricing');
+      const response = await api.get('/payments/token-pricing');
       return response.data;
     } catch (error) {
       console.error('Error fetching token pricing:', error);
@@ -51,7 +51,7 @@ const paymentService = {
   // Calculate token amount for USD
   calculateTokenAmount: async (usdAmount) => {
     try {
-      const response = await api.post('/api/payments/calculate-tokens', {
+      const response = await api.post('/payments/calculate-tokens', {
         usd_amount: usdAmount
       });
       return response.data;
@@ -64,7 +64,7 @@ const paymentService = {
   // Validate wallet address
   validateWalletAddress: async (walletAddress) => {
     try {
-      const response = await api.post('/api/payments/validate-wallet', {
+      const response = await api.post('/payments/validate-wallet', {
         wallet_address: walletAddress
       });
       return response.data;
@@ -77,7 +77,7 @@ const paymentService = {
   // Get payment methods
   getPaymentMethods: async () => {
     try {
-      const response = await api.get('/api/payments/methods');
+      const response = await api.get('/payments/methods');
       return response.data;
     } catch (error) {
       console.error('Error fetching payment methods:', error);
@@ -88,7 +88,7 @@ const paymentService = {
   // Cancel payment
   cancelPayment: async (paymentIntentId) => {
     try {
-      const response = await api.post(`/api/payments/cancel/${paymentIntentId}`);
+      const response = await api.post(`/payments/cancel/${paymentIntentId}`);
       return response.data;
     } catch (error) {
       console.error('Error canceling payment:', error);

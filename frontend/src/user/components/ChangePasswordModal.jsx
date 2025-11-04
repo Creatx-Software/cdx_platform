@@ -55,7 +55,7 @@ const ChangePasswordModal = ({ isOpen, onClose, onSuccess }) => {
     }
 
     try {
-      const response = await api.post('/api/auth/change-password', {
+      const response = await api.post('/auth/change-password', {
         current_password: formData.current_password,
         new_password: formData.new_password
       });

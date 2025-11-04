@@ -28,7 +28,7 @@ const PurchaseSuccess = () => {
   const fetchTransactionDetails = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/api/transactions?payment_intent=${paymentIntentId}`);
+      const response = await api.get(`/transactions?payment_intent=${paymentIntentId}`);
 
       if (response.data.success && response.data.transactions.length > 0) {
         setTransactionData(response.data.transactions[0]);

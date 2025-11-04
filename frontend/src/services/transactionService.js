@@ -4,7 +4,7 @@ const transactionService = {
   // Get user's transaction history with pagination and filtering
   getTransactions: async (params = {}) => {
     try {
-      const response = await api.get('/api/transactions', { params });
+      const response = await api.get('/transactions', { params });
       return response.data;
     } catch (error) {
       console.error('Error fetching transactions:', error);
@@ -15,7 +15,7 @@ const transactionService = {
   // Get specific transaction details
   getTransactionDetails: async (transactionId) => {
     try {
-      const response = await api.get(`/api/transactions/${transactionId}`);
+      const response = await api.get(`/transactions/${transactionId}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching transaction details:', error);
@@ -26,7 +26,7 @@ const transactionService = {
   // Get transaction statistics
   getTransactionStats: async (period = '30d') => {
     try {
-      const response = await api.get('/api/transactions/stats', {
+      const response = await api.get('/transactions/stats', {
         params: { period }
       });
       return response.data;
@@ -39,7 +39,7 @@ const transactionService = {
   // Export transaction history
   exportTransactions: async (params = {}) => {
     try {
-      const response = await api.get('/api/transactions/export', {
+      const response = await api.get('/transactions/export', {
         params,
         responseType: 'blob'
       });
@@ -53,7 +53,7 @@ const transactionService = {
   // Retry failed transaction
   retryTransaction: async (transactionId) => {
     try {
-      const response = await api.post(`/api/transactions/${transactionId}/retry`);
+      const response = await api.post(`/transactions/${transactionId}/retry`);
       return response.data;
     } catch (error) {
       console.error('Error retrying transaction:', error);

@@ -48,7 +48,7 @@ app.use((req, res, next) => {
 app.use(rateLimiter);
 
 // Webhook routes with raw body parsing (MUST be before express.json())
-app.use('/api/webhook',
+app.use('/webhook',
   (req, res, next) => {
     console.log('🚧 RAW MIDDLEWARE: Processing webhook request:', {
       method: req.method,
@@ -77,7 +77,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({
     success: true,
     message: 'Server is running',
@@ -86,7 +86,7 @@ app.get('/api/health', (req, res) => {
 });
 
 // Test database endpoint
-app.get('/api/test/database', async (req, res) => {
+app.get('/test/database', async (req, res) => {
   try {
     const { testConnection } = require('./config/database');
     const connected = await testConnection();
@@ -104,7 +104,7 @@ app.get('/api/test/database', async (req, res) => {
 });
 
 // Test Solana connection endpoint
-app.get('/api/test/solana', async (req, res) => {
+app.get('/test/solana', async (req, res) => {
   try {
     const solanaService = require('./services/solanaService');
 
@@ -128,13 +128,13 @@ app.get('/api/test/solana', async (req, res) => {
 });
 
 // Other routes (after body parsing)
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/payment', paymentRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/transactions', transactionRoutes);
-app.use('/api/token', tokenRoutes);
-app.use('/api/price-history', priceHistoryRoutes);
+app.use('/auth', authRoutes);
+app.use('/user', userRoutes);
+app.use('/payment', paymentRoutes);
+app.use('/admin', adminRoutes);
+app.use('/transactions', transactionRoutes);
+app.use('/token', tokenRoutes);
+app.use('/price-history', priceHistoryRoutes);
 
 // 404 handler
 app.use((req, res) => {

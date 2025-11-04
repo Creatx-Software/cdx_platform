@@ -26,7 +26,7 @@ export const TokenPurchase = () => {
   useEffect(() => {
     const fetchTokenPrice = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/token/price`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/token/price`);
         if (response.ok) {
           const data = await response.json();
           setTokenPrice(data.price);

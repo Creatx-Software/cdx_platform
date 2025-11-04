@@ -79,7 +79,7 @@ class PriceDataService {
    */
   async fetchFromBackend(symbol, days) {
     const response = await fetch(
-      `${process.env.REACT_APP_API_URL}/api/price-history/${symbol}/1d/${days}`,
+      `${process.env.REACT_APP_API_URL}/price-history/${symbol}/1d/${days}`,
       {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`

@@ -3,13 +3,13 @@ import api from './api';
 const authService = {
   // Register
   register: async (userData) => {
-    const response = await api.post('/api/auth/register', userData);
+    const response = await api.post('/auth/register', userData);
     return response.data;
   },
 
   // Login
   login: async (email, password) => {
-    const response = await api.post('/api/auth/login', { email, password });
+    const response = await api.post('/auth/login', { email, password });
     const { token, user } = response.data;
 
     // Store token and user in localStorage
@@ -22,7 +22,7 @@ const authService = {
   // Logout
   logout: async () => {
     try {
-      await api.post('/api/auth/logout');
+      await api.post('/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -34,19 +34,19 @@ const authService = {
 
   // Verify email
   verifyEmail: async (token) => {
-    const response = await api.get(`/api/auth/verify-email?token=${token}`);
+    const response = await api.get(`/auth/verify-email?token=${token}`);
     return response.data;
   },
 
   // Forgot password
   forgotPassword: async (email) => {
-    const response = await api.post('/api/auth/forgot-password', { email });
+    const response = await api.post('/auth/forgot-password', { email });
     return response.data;
   },
 
   // Reset password
   resetPassword: async (token, newPassword) => {
-    const response = await api.post('/api/auth/reset-password', { token, newPassword });
+    const response = await api.post('/auth/reset-password', { token, newPassword });
     return response.data;
   },
 
