@@ -60,7 +60,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
           local_path: './frontend/build/'
-          remote_path: '/var/www/vhosts/r1coin.com/cdx.r1coin.com'
+          remote_path: '/var/www/vhosts/r1coin.com/cdx.r1coin.com/frontend'
           sftp_only: true
           delete_remote_files: true
 
