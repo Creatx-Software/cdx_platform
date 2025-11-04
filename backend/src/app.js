@@ -77,7 +77,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Health check endpoint
-app.get('http://cdx.r1coin.com/api/backend/health', (req, res) => {
+app.get('/api/backend/health', (req, res) => {
   res.json({
     success: true,
     message: 'Server is running',
