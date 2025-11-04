@@ -8,6 +8,7 @@ const logger = require('../utils/logger');
 const authController = {
   // Register new user
   register: async (req, res, next) => {
+    console.log('Register endpoint called');
     try {
       const { email, password, firstName, lastName } = req.body;
 

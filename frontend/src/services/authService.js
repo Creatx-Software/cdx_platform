@@ -4,6 +4,7 @@ const authService = {
   // Register
   register: async (userData) => {
     const response = await api.post('/auth/register', userData);
+    console.log('Register response:', response);
     return response.data;
   },
 
