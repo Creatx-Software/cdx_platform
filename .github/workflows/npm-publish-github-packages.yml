@@ -49,7 +49,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
           local_path: './backend/'
-          remote_path: '/var/www/vhosts/r1coin.com/httpdocs/api'
+          remote_path: '/var/www/vhosts/r1coin.com/cdx.r1coin.com/api'
           sftp_only: true
 
       - name: 📂 Deploy Frontend
@@ -60,7 +60,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
           local_path: './frontend/build/'
-          remote_path: '/var/www/vhosts/r1coin.com/httpdocs'
+          remote_path: '/var/www/vhosts/r1coin.com/cdx.r1coin.com'
           sftp_only: true
           delete_remote_files: true
 
@@ -73,6 +73,6 @@ jobs:
           script: |
             cd /var/www/vhosts/r1coin.com/httpdocs/api && npm install --production
             npm install -g pm2
-            pm2 restart cdx-backend || pm2 start /var/www/vhosts/r1coin.com/httpdocs/api/server.js --name cdx-backend
+            pm2 restart cdx-backend || pm2 start /var/www/vhosts/r1coin.com/cdx.r1coin.com/api/server.js --name cdx-backend
             pm2 save
             echo "Deployment complete!"
