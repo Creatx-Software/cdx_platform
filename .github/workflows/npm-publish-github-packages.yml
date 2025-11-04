@@ -31,6 +31,16 @@ jobs:
           REACT_APP_STRIPE_PUBLIC_KEY: ${{ secrets.REACT_APP_STRIPE_PUBLIC_KEY }}
           REACT_APP_SOLANA_NETWORK: mainnet-beta
 
+      - name: 📁 Create Directories on Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          script: |
+            mkdir -p httpdocs/api
+            mkdir -p httpdocs/frontend
+
       - name: 📂 Deploy Backend
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
@@ -39,7 +49,7 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
           local_path: './backend/'
-          remote_path: '/httpdocs/api'
+          remote_path: './httpdocs/api'
           sftp_only: true
 
       - name: 📂 Deploy Frontend
@@ -50,8 +60,9 @@ jobs:
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
           local_path: './frontend/build/'
-          remote_path: '/httpdocs'
+          remote_path: './httpdocs'
           sftp_only: true
+          delete_remote_files: true
 
       - name: 🔄 Restart Backend
         uses: appleboy/ssh-action@master
@@ -60,6 +71,7 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           script: |
-            cd /var/www/vhosts/r1coin.com/httpdocs/api
+            cd httpdocs/api
             npm install --production
             pm2 restart cdx-backend || pm2 start server.js --name cdx-backend
+            pm2 save
