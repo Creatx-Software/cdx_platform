@@ -128,10 +128,10 @@ app.get('/api/test/solana', async (req, res) => {
 });
 
 // Other routes (after body parsing)
-app.use('/api/auth', authRoutes);
-app.use('/api/user', userRoutes);
-app.use('/api/payment', paymentRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/auth', authRoutes);
+app.use('/user', userRoutes);
+app.use('/payment', paymentRoutes);
+app.use('/admin', adminRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/token', tokenRoutes);
 app.use('/api/price-history', priceHistoryRoutes);
