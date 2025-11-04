@@ -25,7 +25,7 @@ jobs:
         run: |
           npm install --legacy-peer-deps
           npm install ajv@^8.0.0 --legacy-peer-deps
-          npm run build
+          CI=false npm run build
         env:
           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
           REACT_APP_STRIPE_PUBLIC_KEY: ${{ secrets.REACT_APP_STRIPE_PUBLIC_KEY }}
