@@ -31,26 +31,26 @@ jobs:
           REACT_APP_STRIPE_PUBLIC_KEY: ${{ secrets.REACT_APP_STRIPE_PUBLIC_KEY }}
           REACT_APP_SOLANA_NETWORK: mainnet-beta
 
-      - name: 📂 Deploy Backend to /api folder
+      - name: 📂 Deploy Backend
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
-          local_path: './backend/*'
-          remote_path: './httpdocs/api/'
+          local_path: './backend/'
+          remote_path: '/httpdocs/api'
           sftp_only: true
 
-      - name: 📂 Deploy Frontend to root
+      - name: 📂 Deploy Frontend
         uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
           server: ${{ secrets.FTP_HOST }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 22
-          local_path: './frontend/build/*'
-          remote_path: './httpdocs/'
+          local_path: './frontend/build/'
+          remote_path: '/httpdocs'
           sftp_only: true
 
       - name: 🔄 Restart Backend
@@ -60,6 +60,6 @@ jobs:
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           script: |
-            cd httpdocs/api
+            cd /var/www/vhosts/r1coin.com/httpdocs/api
             npm install --production
             pm2 restart cdx-backend || pm2 start server.js --name cdx-backend
