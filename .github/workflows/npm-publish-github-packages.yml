@@ -23,7 +23,7 @@ jobs:
       - name: 🔨 Build Frontend
         working-directory: ./frontend
         run: |
-          npm ci
+          npm install --legacy-peer-deps
           npm run build
         env:
           REACT_APP_API_URL: ${{ secrets.REACT_APP_API_URL }}
