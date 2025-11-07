@@ -130,27 +130,46 @@ const userController = {
       const userId = req.userId;
       const { page = 1, limit = 20 } = req.query;
 
-      const offset = (parseInt(page) - 1) * parseInt(limit);
+      const currentPage = parseInt(page);
+      const pageLimit = parseInt(limit);
+      const offset = (currentPage - 1) * pageLimit;
 
       // Get user transactions
       const transactions = await Transaction.getUserTransactions(
         userId,
-        parseInt(limit),
+        pageLimit,
         offset
       );
+
+      // Get total count for pagination
+      const { query: dbQuery } = require('../config/database');
+      const countResult = await dbQuery(
+        'SELECT COUNT(*) as total FROM transactions WHERE user_id = ?',
+        [userId]
+      );
+
+      const totalTransactions = countResult[0].total;
+      const totalPages = Math.ceil(totalTransactions / pageLimit);
 
       res.json({
         success: true,
         transactions: transactions.map(tx => ({
           id: tx.id,
-          usdAmount: parseFloat(tx.usd_amount),
+          usdAmount: parseFloat(tx.usd_amount || tx.amount_usd),
           tokenAmount: parseFloat(tx.token_amount),
           status: tx.status,
-          walletAddress: tx.solana_wallet_address,
+          walletAddress: tx.recipient_wallet_address || tx.solana_wallet_address,
           transactionSignature: tx.solana_transaction_signature,
           createdAt: tx.created_at,
           updatedAt: tx.updated_at
-        }))
+        })),
+        pagination: {
+          current_page: currentPage,
+          total_pages: totalPages,
+          total_transactions: totalTransactions,
+          has_next: currentPage < totalPages,
+          has_prev: currentPage > 1
+        }
       });
 
     } catch (error) {
