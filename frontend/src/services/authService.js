@@ -57,6 +57,11 @@ const authService = {
     return user ? JSON.parse(user) : null;
   },
 
+  // Update current user in localStorage
+  setCurrentUser: (userData) => {
+    localStorage.setItem('user', JSON.stringify(userData));
+  },
+
   // Get token
   getToken: () => {
     return localStorage.getItem('token');

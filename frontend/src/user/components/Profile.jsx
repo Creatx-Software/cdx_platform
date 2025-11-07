@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { UserIcon, EnvelopeIcon, CalendarIcon, CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import api from '../../services/api';
 import authService from '../../services/authService';
+import { useAuth } from '../../context/AuthContext';
 import Loader from '../../components/common/Loader';
 import Input from '../../components/common/Input';
 import Button from '../../components/common/Button';
 import ChangePasswordModal from './ChangePasswordModal';
 
 const Profile = () => {
+  const { user: contextUser, updateUser } = useAuth();
   const [user, setUser] = useState(null);
   const [userStats, setUserStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,15 +26,16 @@ const Profile = () => {
   useEffect(() => {
     fetchUserProfile();
     fetchUserStats();
-  }, []);
+  }, [contextUser]);
 
   const fetchUserProfile = async () => {
     try {
-      const userInfo = authService.getCurrentUser();
+      // Use contextUser from AuthContext if available, otherwise get from localStorage
+      const userInfo = contextUser || authService.getCurrentUser();
       setUser(userInfo);
       setFormData({
-        first_name: userInfo.first_name || '',
-        last_name: userInfo.last_name || ''
+        first_name: userInfo?.first_name || '',
+        last_name: userInfo?.last_name || ''
       });
     } catch (err) {
       console.error('Error fetching user profile:', err);
@@ -80,7 +83,9 @@ const Profile = () => {
         // Update local user data
         const updatedUser = { ...user, ...formData };
         setUser(updatedUser);
-        authService.setCurrentUser(updatedUser);
+
+        // Update AuthContext (which updates localStorage and Navbar)
+        updateUser(updatedUser);
       }
     } catch (err) {
       console.error('Error updating profile:', err);
@@ -226,67 +231,74 @@ const Profile = () => {
               </div>
             </form>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div className="flex items-center p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg border border-primary-200">
-                  <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
-                    <UserIcon className="w-5 h-5 text-white" />
+            <div className="space-y-6">
+              {/* Profile Information - Full Width Modern Cards */}
+              <div className="space-y-4">
+                <div className="flex items-center p-5 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-xl border border-primary-200 hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <UserIcon className="w-6 h-6 text-white" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-text-muted">Full Name</p>
-                    <p className="font-semibold text-text-primary">{user?.first_name || 'Not set'} {user?.last_name || ''}</p>
-                  </div>
-                </div>
-                <div className="flex items-center p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg border border-primary-200">
-                  <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
-                    <EnvelopeIcon className="w-5 h-5 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-text-muted">Email Address</p>
-                    <p className="font-semibold text-text-primary">{user?.email}</p>
+                  <div className="ml-5 flex-1">
+                    <p className="text-sm text-text-muted font-medium mb-1">Full Name</p>
+                    <p className="text-lg font-semibold text-text-primary">{user?.first_name || 'Not set'} {user?.last_name || ''}</p>
                   </div>
                 </div>
-                <div className="flex items-center p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg border border-primary-200">
-                  <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center">
-                    <CalendarIcon className="w-5 h-5 text-white" />
+
+                <div className="flex items-center p-5 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-xl border border-primary-200 hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <EnvelopeIcon className="w-6 h-6 text-white" />
                   </div>
-                  <div className="ml-4">
-                    <p className="text-sm text-text-muted">Member Since</p>
-                    <p className="font-semibold text-text-primary">
-                      {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                  <div className="ml-5 flex-1">
+                    <p className="text-sm text-text-muted font-medium mb-1">Email Address</p>
+                    <p className="text-lg font-semibold text-text-primary">{user?.email}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center p-5 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-xl border border-primary-200 hover:shadow-md transition-shadow">
+                  <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <CalendarIcon className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="ml-5 flex-1">
+                    <p className="text-sm text-text-muted font-medium mb-1">Member Since</p>
+                    <p className="text-lg font-semibold text-text-primary">
+                      {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      }) : 'N/A'}
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Account Statistics */}
+              {/* Account Statistics - Full Width */}
               {userStats && (
-                <div className="space-y-6">
-                  <h3 className="title-card">Account Statistics</h3>
-                  <div className="grid grid-cols-2 gap-4">
+                <div className="mt-8">
+                  <h3 className="title-card mb-6">Account Statistics</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="card-gold p-6 text-center transform hover-scale">
                       <p className="text-3xl font-bold text-gradient mb-2">
                         {formatNumber(userStats.total_tokens)}
                       </p>
-                      <p className="text-sm text-text-muted">CDX Tokens</p>
+                      <p className="text-sm text-text-muted font-medium">CDX Tokens</p>
                     </div>
                     <div className="card-gold p-6 text-center transform hover-scale">
                       <p className="text-3xl font-bold text-gradient mb-2">
                         {formatCurrency(userStats.total_spent)}
                       </p>
-                      <p className="text-sm text-text-muted">Total Spent</p>
+                      <p className="text-sm text-text-muted font-medium">Total Spent</p>
                     </div>
                     <div className="card-gold p-6 text-center transform hover-scale">
                       <p className="text-3xl font-bold text-gradient mb-2">
                         {formatNumber(userStats.total_transactions)}
                       </p>
-                      <p className="text-sm text-text-muted">Transactions</p>
+                      <p className="text-sm text-text-muted font-medium">Transactions</p>
                     </div>
                     <div className="card-gold p-6 text-center transform hover-scale">
                       <p className="text-3xl font-bold text-gradient mb-2">
                         {formatCurrency(userStats.pending_amount)}
                       </p>
-                      <p className="text-sm text-text-muted">Pending</p>
+                      <p className="text-sm text-text-muted font-medium">Pending</p>
                     </div>
                   </div>
                   {/* View All Transactions Link */}

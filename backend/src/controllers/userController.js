@@ -53,10 +53,14 @@ const userController = {
   updateProfile: async (req, res, next) => {
     try {
       const userId = req.userId;
-      const { firstName, lastName } = req.body;
+      // Support both camelCase and snake_case for compatibility
+      const { firstName, lastName, first_name, last_name } = req.body;
+
+      const firstNameValue = firstName || first_name;
+      const lastNameValue = lastName || last_name;
 
       // Validate required fields
-      if (!firstName || !lastName) {
+      if (!firstNameValue || !lastNameValue) {
         return res.status(400).json({
           success: false,
           error: 'First name and last name are required'
@@ -65,8 +69,8 @@ const userController = {
 
       // Update user
       await User.updateUser(userId, {
-        first_name: firstName,
-        last_name: lastName
+        first_name: firstNameValue,
+        last_name: lastNameValue
       });
 
       logger.info(`Profile updated for user ${userId}`);

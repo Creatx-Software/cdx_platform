@@ -440,14 +440,14 @@ const HomePage = () => {
           <div className="border-t border-gray-700 pt-8">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <p className="text-gray-400 mb-4 md:mb-0">
-                © 2024 CDX Platform. All rights reserved.
+                © 2025 CDX Platform. All rights reserved.
               </p>
               <div className="flex items-center space-x-6 text-gray-400">
                 <span className="flex items-center">
                   <span className="w-2 h-2 bg-green-400 rounded-full mr-2"></span>
                   All systems operational
                 </span>
-                <span>Made with ❤️ for DeFi</span>
+                <span>Design & Developed by CODEXER</span>
               </div>
             </div>
           </div>

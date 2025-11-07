@@ -47,12 +47,12 @@ const Navbar = () => {
         <div className="flex justify-between h-16">
           {/* Logo and primary nav */}
           <div className="flex items-center">
-            <Link to="/" className="flex items-center hover-scale">
+            <Link to="/" className="flex items-center hover-scale no-underline">
               <div className="flex-shrink-0">
                 <span className="text-2xl font-bold text-primary-600">CDX</span>
               </div>
               <div className="ml-2">
-                <span className="text-lg font-medium text-text-primary">Platform</span>
+                <span className="text-lg font-medium text-text-primary">Exchange</span>
               </div>
             </Link>
 

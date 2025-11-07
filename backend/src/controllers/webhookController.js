@@ -153,6 +153,26 @@ const handlePaymentSucceeded = async (paymentIntent) => {
     if (updated) {
       logger.info(`Transaction ${transaction.id} marked as processing for token distribution`);
 
+      // Send purchase confirmation email
+      try {
+        const emailService = require('../services/emailService');
+        const transactionWithUser = await Transaction.getTransactionWithUser(transaction.id);
+
+        if (transactionWithUser) {
+          await emailService.sendPurchaseConfirmationEmail(
+            transactionWithUser.email,
+            transactionWithUser.first_name,
+            transactionWithUser
+          );
+          logger.info(`Purchase confirmation email sent to ${transactionWithUser.email} for transaction ${transaction.id}`);
+        } else {
+          logger.error(`Failed to get transaction with user data for email: ${transaction.id}`);
+        }
+      } catch (emailError) {
+        // Log error but don't fail the transaction
+        logger.error(`Failed to send purchase confirmation email for transaction ${transaction.id}:`, emailError);
+      }
+
       // Trigger real Solana token distribution
       setTimeout(async () => {
         try {

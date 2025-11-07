@@ -143,10 +143,15 @@ const authController = {
         user: {
           id: user.id,
           email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name,
           firstName: user.first_name,
           lastName: user.last_name,
           role: user.role,
-          walletAddress: user.solana_wallet_address
+          walletAddress: user.solana_wallet_address,
+          email_verified: user.email_verified,
+          created_at: user.created_at,
+          last_login: user.last_login_at
         }
       });
 
@@ -189,10 +194,9 @@ const authController = {
         user.first_name
       );
 
-      res.json({
-        success: true,
-        message: 'Email verified successfully. You can now log in.'
-      });
+      // Redirect to frontend with success message
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      res.redirect(`${frontendUrl}/login?verified=true`);
 
     } catch (error) {
       logger.error('Email verification error:', error);

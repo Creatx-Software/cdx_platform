@@ -169,13 +169,21 @@
   .nav-link {
     @apply text-text-secondary hover:text-primary-600 font-medium
            transition-colors duration-300 px-4 py-2 rounded-lg
-           hover:bg-primary-50;
+           hover:bg-primary-50 no-underline;
+  }
+
+  .nav-link:hover {
+    text-decoration: none !important;
   }
 
   /* Active Nav Link */
   .nav-link-active {
     @apply text-primary-600 bg-primary-50 font-semibold
-           px-4 py-2 rounded-lg;
+           px-4 py-2 rounded-lg no-underline;
+  }
+
+  .nav-link-active:hover {
+    text-decoration: none !important;
   }
 
   /* ===== TABLES ===== */
@@ -343,6 +351,10 @@
   /* Hover Scale */
   .hover-scale {
     @apply hover:scale-[1.02] transition-transform duration-300;
+  }
+
+  .hover-scale:hover {
+    text-decoration: none !important;
   }
 
   /* Glow Effect */

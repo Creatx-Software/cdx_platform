@@ -20,7 +20,7 @@ app.use(helmet());
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://cdx.r1coin.com/:3000',
+  origin: process.env.FRONTEND_URL || 'https://cdx.r1coin.com',
   credentials: true
 }));
 

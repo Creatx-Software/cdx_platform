@@ -1,5 +1,5 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import LoginForm from '../components/auth/LoginForm';
 import Loader from '../components/common/Loader';
@@ -7,7 +7,19 @@ import Button from '../components/common/Button';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { loading, isAuthenticated } = useAuth();
+  const [showVerifiedMessage, setShowVerifiedMessage] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('verified') === 'true') {
+      setShowVerifiedMessage(true);
+      // Hide message after 5 seconds
+      setTimeout(() => {
+        setShowVerifiedMessage(false);
+      }, 5000);
+    }
+  }, [searchParams]);
 
   // Show loading while checking authentication
   if (loading) {
@@ -32,6 +44,17 @@ const LoginPage = () => {
             {isAuthenticated ? 'You are already logged in' : 'Access your CDX token dashboard'}
           </p>
         </div>
+
+        {showVerifiedMessage && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <p className="text-green-800 font-medium">Email verified successfully! You can now log in.</p>
+            </div>
+          </div>
+        )}
 
         <div className="card-premium p-8 transform hover-scale-sm">
           {isAuthenticated ? (

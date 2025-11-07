@@ -41,7 +41,7 @@ const emailService = {
   // Send verification email
   sendVerificationEmail: async (userEmail, userName, token) => {
     try {
-      const verificationUrl = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+      const verificationUrl = `${process.env.FRONTEND_URL}/auth/verify-email?token=${token}`;
       
       // Load template
       const templatePath = path.join(__dirname, '../templates/verification.html');
@@ -91,24 +91,82 @@ const emailService = {
   // Send password reset email
   sendPasswordResetEmail: async (userEmail, userName, token) => {
     try {
+      // Keep password reset pointing to frontend page since it needs a form
       const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
-      
+
       const templatePath = path.join(__dirname, '../templates/passwordReset.html');
       let html = await fs.readFile(templatePath, 'utf-8');
-      
+
       html = html.replace('{{userName}}', userName);
       html = html.replace('{{resetUrl}}', resetUrl);
-      
+
       const subject = 'Password Reset Request - CDX Platform';
-      
+
       const result = await emailService.sendEmail(userEmail, subject, html);
-      
+
       await emailService.logEmail(null, userEmail, 'password_reset', subject,
         result.success ? 'sent' : 'failed');
-      
+
       return result;
     } catch (error) {
       logger.error('Failed to send password reset email:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Send purchase confirmation email
+  sendPurchaseConfirmationEmail: async (userEmail, userName, transactionData) => {
+    try {
+      const templatePath = path.join(__dirname, '../templates/purchaseConfirmation.html');
+      let html = await fs.readFile(templatePath, 'utf-8');
+
+      // Format the purchase date
+      const purchaseDate = new Date(transactionData.created_at).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      });
+
+      // Dashboard URL
+      const dashboardUrl = `${process.env.FRONTEND_URL}/user/dashboard`;
+
+      // Blockchain transaction details (might be null if tokens not sent yet)
+      const blockchainTxHash = transactionData.solana_transaction_signature || 'Processing...';
+      const explorerUrl = transactionData.solana_transaction_signature
+        ? `https://explorer.solana.com/tx/${transactionData.solana_transaction_signature}?cluster=devnet`
+        : '#';
+
+      // Replace all placeholders
+      html = html.replace('{{userName}}', userName || 'Valued Customer');
+      html = html.replace('{{transactionId}}', transactionData.id);
+      html = html.replace('{{tokenAmount}}', parseFloat(transactionData.token_amount).toLocaleString('en-US', { maximumFractionDigits: 2 }));
+      html = html.replace('{{usdAmount}}', parseFloat(transactionData.amount_usd).toFixed(2));
+      html = html.replace('{{tokenPrice}}', parseFloat(transactionData.token_price_at_purchase).toFixed(4));
+      html = html.replace('{{walletAddress}}', transactionData.recipient_wallet_address);
+      html = html.replace('{{purchaseDate}}', purchaseDate);
+      html = html.replace('{{blockchainTxHash}}', blockchainTxHash);
+      html = html.replace('{{explorerUrl}}', explorerUrl);
+      html = html.replace('{{dashboardUrl}}', dashboardUrl);
+
+      const subject = 'Payment Confirmed - Tokens Being Sent to Your Wallet';
+
+      const result = await emailService.sendEmail(userEmail, subject, html);
+
+      // Log to database with user_id
+      await emailService.logEmail(
+        transactionData.user_id,
+        userEmail,
+        'purchase_confirmation',
+        subject,
+        result.success ? 'sent' : 'failed'
+      );
+
+      return result;
+    } catch (error) {
+      logger.error('Failed to send purchase confirmation email:', error);
       return { success: false, error: error.message };
     }
   }
