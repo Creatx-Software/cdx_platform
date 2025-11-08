@@ -41,9 +41,18 @@ export const AuthProvider = ({ children }) => {
 
   // Login
   const loginUser = async (email, password) => {
+    console.log('🔑 AuthContext.loginUser called for:', email);
     const data = await authService.login(email, password);
+    console.log('📦 Login response data:', {
+      hasUser: !!data.user,
+      userId: data.user?.id,
+      userEmail: data.user?.email,
+      userRole: data.user?.role,
+      hasToken: !!data.token
+    });
     setUser(data.user);
     setToken(data.token);
+    console.log('✅ AuthContext state updated - user:', data.user?.email, 'role:', data.user?.role);
     return data;
   };
 

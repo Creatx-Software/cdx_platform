@@ -23,8 +23,8 @@ const TokenManagement = () => {
     token_symbol: '',
     token_name: '',
     blockchain: 'Solana',
-    contract_address: '',
-    current_price: '',
+    token_address: '',
+    price_per_token: '',
     min_purchase_amount: '10',
     max_purchase_amount: '10000',
     daily_purchase_limit: '50000',
@@ -41,7 +41,7 @@ const TokenManagement = () => {
       setLoading(true);
       setError(null);
 
-      const response = await api.get('/admin/tokens/all');
+      const response = await api.get('/tokens/admin/all');
 
       if (response.data.success) {
         setTokens(response.data.tokens);
@@ -59,8 +59,8 @@ const TokenManagement = () => {
       token_symbol: '',
       token_name: '',
       blockchain: 'Solana',
-      contract_address: '',
-      current_price: '',
+      token_address: '',
+      price_per_token: '',
       min_purchase_amount: '10',
       max_purchase_amount: '10000',
       daily_purchase_limit: '50000',
@@ -81,8 +81,8 @@ const TokenManagement = () => {
       token_symbol: token.token_symbol,
       token_name: token.token_name,
       blockchain: token.blockchain,
-      contract_address: token.contract_address || '',
-      current_price: token.current_price.toString(),
+      token_address: token.token_address || '',
+      price_per_token: token.price_per_token.toString(),
       min_purchase_amount: token.min_purchase_amount.toString(),
       max_purchase_amount: token.max_purchase_amount.toString(),
       daily_purchase_limit: token.daily_purchase_limit.toString(),
@@ -106,12 +106,24 @@ const TokenManagement = () => {
     try {
       setProcessingId(selectedToken?.id || 'new');
 
+      // Map frontend snake_case to backend camelCase
+      // Convert empty strings to null for optional fields
       const payload = {
-        ...tokenForm,
-        current_price: parseFloat(tokenForm.current_price),
-        min_purchase_amount: parseFloat(tokenForm.min_purchase_amount),
-        max_purchase_amount: parseFloat(tokenForm.max_purchase_amount),
-        daily_purchase_limit: parseFloat(tokenForm.daily_purchase_limit)
+        tokenName: tokenForm.token_name || null,
+        tokenSymbol: tokenForm.token_symbol || null,
+        tokenAddress: tokenForm.token_address || null,
+        blockchain: tokenForm.blockchain || 'Solana',
+        pricePerToken: parseFloat(tokenForm.price_per_token) || 0,
+        currency: 'USD',
+        minPurchaseAmount: parseFloat(tokenForm.min_purchase_amount) || 10,
+        maxPurchaseAmount: parseFloat(tokenForm.max_purchase_amount) || 10000,
+        minTokenAmount: 100, // Default minimum tokens
+        maxTokenAmount: 100000, // Default maximum tokens
+        dailyPurchaseLimit: parseFloat(tokenForm.daily_purchase_limit) || 50000,
+        isActive: tokenForm.is_active !== undefined ? tokenForm.is_active : true,
+        description: tokenForm.description || null,
+        displayOrder: 0,
+        logoUrl: null
       };
 
       let response;
@@ -128,7 +140,7 @@ const TokenManagement = () => {
       }
     } catch (err) {
       console.error('Error saving token:', err);
-      alert(err.response?.data?.error || `Failed to ${modalMode} token`);
+      alert(err.response?.data?.message || err.response?.data?.error || `Failed to ${modalMode} token`);
     } finally {
       setProcessingId(null);
     }
@@ -268,7 +280,7 @@ Completed Fulfillments: ${stats.completed_fulfillments}`);
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-gray-600">Current Price:</span>
                   <span className="text-lg font-bold text-primary-600">
-                    {formatCurrency(token.current_price)}
+                    {formatCurrency(token.price_per_token)}
                   </span>
                 </div>
 
@@ -307,12 +319,12 @@ Completed Fulfillments: ${stats.completed_fulfillments}`);
                   </div>
                 )}
 
-                {/* Contract Address */}
-                {token.contract_address && (
+                {/* Token Address */}
+                {token.token_address && (
                   <div className="pt-2 border-t border-gray-200">
-                    <p className="text-xs text-gray-500">Contract:</p>
+                    <p className="text-xs text-gray-500">Token Address:</p>
                     <p className="text-xs font-mono text-gray-700 truncate">
-                      {token.contract_address}
+                      {token.token_address}
                     </p>
                   </div>
                 )}
@@ -450,17 +462,17 @@ Completed Fulfillments: ${stats.completed_fulfillments}`);
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Current Price (USD) <span className="text-red-500">*</span>
+                    Price Per Token (USD) <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="number"
                     step="0.000001"
                     min="0"
                     required
-                    value={tokenForm.current_price}
+                    value={tokenForm.price_per_token}
                     onChange={(e) => setTokenForm(prev => ({
                       ...prev,
-                      current_price: e.target.value
+                      price_per_token: e.target.value
                     }))}
                     placeholder="0.50"
                     className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -468,17 +480,17 @@ Completed Fulfillments: ${stats.completed_fulfillments}`);
                 </div>
               </div>
 
-              {/* Contract Address */}
+              {/* Token Address */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Contract Address (Optional)
+                  Token Address (Optional)
                 </label>
                 <input
                   type="text"
-                  value={tokenForm.contract_address}
+                  value={tokenForm.token_address}
                   onChange={(e) => setTokenForm(prev => ({
                     ...prev,
-                    contract_address: e.target.value
+                    token_address: e.target.value
                   }))}
                   placeholder="0x... or token mint address"
                   className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500"

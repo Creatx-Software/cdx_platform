@@ -131,11 +131,21 @@ const TransactionList = () => {
   };
 
   const getStatusBadge = (status) => {
+    // Handle undefined/null status
+    if (!status) {
+      return (
+        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+          Unknown
+        </span>
+      );
+    }
+
     const statusClasses = {
       completed: 'bg-green-100 text-green-800',
       pending: 'bg-yellow-100 text-yellow-800',
       processing: 'bg-blue-100 text-blue-800',
-      failed: 'bg-red-100 text-red-800'
+      failed: 'bg-red-100 text-red-800',
+      succeeded: 'bg-green-100 text-green-800' // Stripe uses 'succeeded'
     };
 
     return (
@@ -369,7 +379,7 @@ const TransactionList = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(transaction.amount_usd)}
+                        {formatCurrency(transaction.usd_amount)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {formatNumber(transaction.token_amount)} CDX
@@ -427,7 +437,7 @@ const TransactionList = () => {
                   <div className="grid grid-cols-2 gap-4 mb-3">
                     <div>
                       <p className="text-xs text-gray-500">Amount</p>
-                      <p className="font-semibold">{formatCurrency(transaction.amount_usd)}</p>
+                      <p className="font-semibold">{formatCurrency(transaction.usd_amount)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Tokens</p>
@@ -541,7 +551,7 @@ const TransactionList = () => {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Amount (USD)</p>
-                      <p className="font-medium">{formatCurrency(selectedTransaction.amount_usd)}</p>
+                      <p className="font-medium">{formatCurrency(selectedTransaction.usd_amount)}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">CDX Tokens</p>

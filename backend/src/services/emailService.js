@@ -41,15 +41,19 @@ const emailService = {
   // Send verification email
   sendVerificationEmail: async (userEmail, userName, token) => {
     try {
-      const verificationUrl = `${process.env.FRONTEND_URL}/auth/verify-email?token=${token}`;
-      
+      // FIXED: Verification should go to BACKEND, not frontend
+      // Backend will handle verification and redirect to frontend with success message
+      // Routes are mounted at /auth (see app.js line 107), so no /api prefix needed
+      const backendUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
+      const verificationUrl = `${backendUrl}/auth/verify-email?token=${token}`;
+
       // Load template
       const templatePath = path.join(__dirname, '../templates/verification.html');
       let html = await fs.readFile(templatePath, 'utf-8');
-      
+
       // Replace placeholders
       html = html.replace('{{userName}}', userName);
-      html = html.replace('{{verificationUrl}}', verificationUrl);
+      html = html.replace(/{{verificationUrl}}/g, verificationUrl); // Replace all occurrences
       
       const subject = 'Verify Your Email - CDX Platform';
       

@@ -72,30 +72,52 @@ const User = {
 
   // Verify user email
   verifyUserEmail: async (token) => {
+    console.log('🔍 Verifying email with token:', token ? token.substring(0, 10) + '...' : 'NO TOKEN');
+
     // Find user by token
     const sql = `
-      SELECT id FROM users 
-      WHERE email_verification_token = ? 
+      SELECT id, email FROM users
+      WHERE email_verification_token = ?
       AND email_verification_expires > NOW()
     `;
     const results = await query(sql, [token]);
-    
+
+    console.log('📊 Token lookup result:', results.length > 0 ? `Found user ID: ${results[0].id}` : 'No matching token found');
+
     if (results.length === 0) {
-      return { success: false, error: 'Invalid or expired token' };
+      // Check if token exists but is expired
+      const expiredCheck = await query(
+        'SELECT id, email, email_verification_expires FROM users WHERE email_verification_token = ?',
+        [token]
+      );
+
+      if (expiredCheck.length > 0) {
+        console.log('⚠️ Token found but EXPIRED for user:', expiredCheck[0].email);
+        console.log('Expiry was:', expiredCheck[0].email_verification_expires);
+        return { success: false, error: 'Verification link has expired. Please request a new one.' };
+      }
+
+      console.log('❌ Token not found in database at all');
+      return { success: false, error: 'Invalid verification link' };
     }
-    
+
     const userId = results[0].id;
-    
+    const userEmail = results[0].email;
+
+    console.log('✅ Updating user verification status for:', userEmail);
+
     // Update user
-    await query(
-      `UPDATE users 
-       SET email_verified = TRUE, 
-           email_verification_token = NULL, 
-           email_verification_expires = NULL 
+    const updateResult = await query(
+      `UPDATE users
+       SET email_verified = TRUE,
+           email_verification_token = NULL,
+           email_verification_expires = NULL
        WHERE id = ?`,
       [userId]
     );
-    
+
+    console.log('✅ Email verified successfully for user ID:', userId, '- Rows affected:', updateResult.affectedRows);
+
     return { success: true, userId };
   },
 

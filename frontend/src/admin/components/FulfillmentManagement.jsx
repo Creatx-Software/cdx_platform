@@ -22,7 +22,7 @@ const FulfillmentManagement = () => {
     notes: ''
   });
   const [fulfillmentStats, setFulfillmentStats] = useState(null);
-  const [filterStatus, setFilterStatus] = useState('pending'); // pending, processing, all
+  const [filterStatus, setFilterStatus] = useState('all'); // pending, processing, all
 
   useEffect(() => {
     fetchPendingFulfillments();
@@ -259,7 +259,9 @@ const FulfillmentManagement = () => {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-500">Avg. Fulfillment Time</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {fulfillmentStats.avg_fulfillment_time_hours?.toFixed(1) || '0'}h
+                  {fulfillmentStats.avg_fulfillment_time_hours
+                    ? parseFloat(fulfillmentStats.avg_fulfillment_time_hours).toFixed(1)
+                    : '0'}h
                 </p>
               </div>
             </div>
@@ -456,11 +458,14 @@ const FulfillmentManagement = () => {
                     ...prev,
                     transactionHash: e.target.value
                   }))}
-                  placeholder="Enter blockchain transaction hash"
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  placeholder="e.g., 5Z3vKw8qK9YfHdVn2N8P3xT7jR6sL1mW4pQ9nM8cB2aE1vX7tY6uH5gF4dS3aW2zX1"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 font-mono text-sm"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  The transaction hash from the blockchain after sending tokens
+                  The transaction hash from Solana blockchain after sending tokens
+                </p>
+                <p className="text-xs text-blue-600 mt-1">
+                  Example: 5Z3vKw8qK9YfHdVn2N8P3xT7jR6sL1mW4pQ9nM8cB2aE1vX7tY6uH5gF4dS3aW2zX1
                 </p>
               </div>
 

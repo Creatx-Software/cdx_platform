@@ -3,7 +3,6 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import PaymentForm from './PaymentForm';
 import WalletAddressInput from './WalletAddressInput';
-import TestWalletSelector from './TestWalletSelector';
 import Input from '../common/Input';
 import Button from '../common/Button';
 import Loader from '../common/Loader';
@@ -48,8 +47,8 @@ export const TokenPurchase = () => {
   // Calculate token amount based on USD amount and selected token price
   useEffect(() => {
     const amount = parseFloat(usdAmount);
-    if (!isNaN(amount) && amount > 0 && selectedToken && selectedToken.current_price > 0) {
-      setTokenAmount(Math.floor(amount / selectedToken.current_price));
+    if (!isNaN(amount) && amount > 0 && selectedToken && selectedToken.price_per_token > 0) {
+      setTokenAmount(Math.floor(amount / selectedToken.price_per_token));
     } else {
       setTokenAmount(0);
     }
@@ -58,11 +57,6 @@ export const TokenPurchase = () => {
   const handleWalletChange = (address, isValid) => {
     setWalletAddress(address);
     setIsWalletValid(isValid);
-  };
-
-  const handleTestWalletSelect = (address) => {
-    setWalletAddress(address);
-    setIsWalletValid(true);
   };
 
   const handleProceedToPayment = () => {
@@ -117,8 +111,8 @@ export const TokenPurchase = () => {
     // Recalculate token amount when token changes
     if (usdAmount) {
       const amount = parseFloat(usdAmount);
-      if (!isNaN(amount) && amount > 0 && token.current_price > 0) {
-        setTokenAmount(Math.floor(amount / token.current_price));
+      if (!isNaN(amount) && amount > 0 && token.price_per_token > 0) {
+        setTokenAmount(Math.floor(amount / token.price_per_token));
       }
     }
   };
@@ -172,7 +166,7 @@ export const TokenPurchase = () => {
                       </div>
                       <div className="text-right ml-4">
                         <div className="text-xl font-bold text-gradient">
-                          ${parseFloat(token.current_price).toFixed(3)}
+                          ${parseFloat(token.price_per_token).toFixed(3)}
                         </div>
                         <div className="text-xs text-text-muted">per token</div>
                       </div>
@@ -222,12 +216,6 @@ export const TokenPurchase = () => {
               value={walletAddress}
               onChange={handleWalletChange}
               error=""
-            />
-
-            {/* Test Wallet Selector (Development Only) */}
-            <TestWalletSelector
-              onWalletSelect={handleTestWalletSelect}
-              className="mt-4"
             />
 
             {/* Error Display */}

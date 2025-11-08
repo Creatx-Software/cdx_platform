@@ -216,6 +216,8 @@ const Transaction = {
   // Get pending fulfillments (for admin)
   getPendingFulfillments: async (limit = 50, offset = 0) => {
     try {
+      // Note: LIMIT and OFFSET must be in the SQL string, not as parameters
+      // Fetch all unfulfilled transactions (pending OR processing)
       const sql = `
         SELECT
           t.*,
@@ -230,12 +232,12 @@ const Transaction = {
         JOIN users u ON t.user_id = u.id
         JOIN tokens tok ON t.token_id = tok.id
         WHERE t.payment_status = 'succeeded'
-          AND t.fulfillment_status = 'pending'
+          AND t.fulfillment_status IN ('pending', 'processing')
         ORDER BY t.created_at ASC
-        LIMIT ? OFFSET ?
+        LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
       `;
 
-      const results = await query(sql, [limit, offset]);
+      const results = await query(sql);
       return results;
     } catch (error) {
       logger.error('Error getting pending fulfillments:', error);
@@ -250,7 +252,7 @@ const Transaction = {
         SELECT COUNT(*) as count
         FROM transactions
         WHERE payment_status = 'succeeded'
-          AND fulfillment_status = 'pending'
+          AND fulfillment_status IN ('pending', 'processing')
       `;
 
       const results = await query(sql);

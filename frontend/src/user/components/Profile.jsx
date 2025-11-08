@@ -234,33 +234,33 @@ const Profile = () => {
             <div className="space-y-6">
               {/* Profile Information - Full Width Modern Cards */}
               <div className="space-y-4">
-                <div className="flex items-center p-5 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-xl border border-primary-200 hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="flex items-center p-6 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 group">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
                     <UserIcon className="w-6 h-6 text-white" />
                   </div>
                   <div className="ml-5 flex-1">
-                    <p className="text-sm text-text-muted font-medium mb-1">Full Name</p>
-                    <p className="text-lg font-semibold text-text-primary">{user?.first_name || 'Not set'} {user?.last_name || ''}</p>
+                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-1">Full Name</p>
+                    <p className="text-base font-semibold text-gray-900">{user?.first_name || 'Not set'} {user?.last_name || ''}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center p-5 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-xl border border-primary-200 hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="flex items-center p-6 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 group">
+                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
                     <EnvelopeIcon className="w-6 h-6 text-white" />
                   </div>
                   <div className="ml-5 flex-1">
-                    <p className="text-sm text-text-muted font-medium mb-1">Email Address</p>
-                    <p className="text-lg font-semibold text-text-primary">{user?.email}</p>
+                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-1">Email Address</p>
+                    <p className="text-base font-semibold text-gray-900">{user?.email}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center p-5 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-xl border border-primary-200 hover:shadow-md transition-shadow">
-                  <div className="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="flex items-center p-6 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 group">
+                  <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
                     <CalendarIcon className="w-6 h-6 text-white" />
                   </div>
                   <div className="ml-5 flex-1">
-                    <p className="text-sm text-text-muted font-medium mb-1">Member Since</p>
-                    <p className="text-lg font-semibold text-text-primary">
+                    <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-1">Member Since</p>
+                    <p className="text-base font-semibold text-gray-900">
                       {user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
@@ -322,47 +322,56 @@ const Profile = () => {
 
       {/* Security Section */}
       <div className="card-premium mt-8 p-8">
-        <h2 className="title-card mb-6">Security</h2>
-        <div className="space-y-6">
-          <div className="flex justify-between items-center py-4 border-b border-border-light">
-            <div className="flex items-start">
-              <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center mr-4">
-                <EnvelopeIcon className="w-5 h-5 text-white" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">Security & Account Access</h2>
+        <div className="space-y-4">
+          {/* Email Verification */}
+          <div className="flex items-center justify-between p-6 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 group">
+            <div className="flex items-center flex-1">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+                <EnvelopeIcon className="w-6 h-6 text-white" />
               </div>
-              <div>
-                <p className="font-semibold text-text-primary">Email Verification</p>
-                <p className="text-sm text-text-muted mt-1">
+              <div className="ml-5">
+                <p className="text-sm font-semibold text-gray-900 mb-1">Email Verification</p>
+                <p className="text-xs text-gray-600">
                   {user?.email_verified ? 'Your email is verified' : 'Please verify your email address'}
                 </p>
               </div>
             </div>
             {!user?.email_verified && (
-              <Button variant="primary" className="px-6 py-3">
-                <span className="flex items-center">
+              <Button variant="primary" className="px-5 py-2.5 ml-4">
+                <span className="flex items-center text-sm">
                   <EnvelopeIcon className="w-4 h-4 mr-2" />
                   Resend Verification
                 </span>
               </Button>
             )}
+            {user?.email_verified && (
+              <div className="ml-4 bg-green-100 text-green-700 px-4 py-2 rounded-full flex items-center">
+                <CheckCircleIcon className="w-4 h-4 mr-1.5" />
+                <span className="text-xs font-semibold">Verified</span>
+              </div>
+            )}
           </div>
-          <div className="flex justify-between items-center py-4 border-b border-border-light">
-            <div className="flex items-start">
-              <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center mr-4">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+          {/* Password */}
+          <div className="flex items-center justify-between p-6 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 group">
+            <div className="flex items-center flex-1">
+              <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <div>
-                <p className="font-semibold text-text-primary">Password</p>
-                <p className="text-sm text-text-muted mt-1">Last updated: Never</p>
+              <div className="ml-5">
+                <p className="text-sm font-semibold text-gray-900 mb-1">Password</p>
+                <p className="text-xs text-gray-600">Last updated: Never</p>
               </div>
             </div>
             <Button
               variant="secondary"
-              className="px-6 py-3"
+              className="px-5 py-2.5 ml-4"
               onClick={() => setShowChangePasswordModal(true)}
             >
-              <span className="flex items-center">
+              <span className="flex items-center text-sm">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
@@ -370,16 +379,24 @@ const Profile = () => {
               </span>
             </Button>
           </div>
-          <div className="flex items-start py-4">
-            <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center mr-4">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+          {/* Last Login */}
+          <div className="flex items-center p-6 bg-white rounded-2xl border border-gray-100 hover:shadow-lg transition-all duration-300 group">
+            <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg group-hover:scale-110 transition-transform">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <div>
-              <p className="font-semibold text-text-primary">Last Login</p>
-              <p className="text-sm text-text-muted mt-1">
-                {user?.last_login ? new Date(user.last_login).toLocaleString() : 'N/A'}
+            <div className="ml-5 flex-1">
+              <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-1">Last Login</p>
+              <p className="text-base font-semibold text-gray-900">
+                {user?.last_login ? new Date(user.last_login).toLocaleString('en-US', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }) : 'N/A'}
               </p>
             </div>
           </div>

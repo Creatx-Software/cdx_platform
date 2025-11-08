@@ -31,7 +31,7 @@ const LoginForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.email || !formData.password) {
       setErrors({ submit: 'Please fill in all fields' });
       return;
@@ -41,15 +41,31 @@ const LoginForm = () => {
     setErrors({});
 
     try {
+      console.log('🔐 Attempting login for:', formData.email);
       const result = await loginUser(formData.email, formData.password);
+
+      console.log('✅ Login successful! Result:', {
+        hasUser: !!result.user,
+        userId: result.user?.id,
+        email: result.user?.email,
+        role: result.user?.role,
+        hasToken: !!result.token
+      });
 
       // Role-based redirection
       if (result.user.role === 'ADMIN') {
+        console.log('🔑 Admin role detected - redirecting to /admin');
         navigate('/admin');
       } else {
+        console.log('👤 User role detected - redirecting to /dashboard');
         navigate('/dashboard');
       }
     } catch (error) {
+      console.error('❌ Login failed:', {
+        error: error.response?.data?.error || error.message,
+        status: error.response?.status,
+        fullError: error
+      });
       setErrors({
         submit: error.response?.data?.error || 'Login failed. Please try again.'
       });

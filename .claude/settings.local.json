@@ -10,7 +10,8 @@
       "Bash(npm install:*)",
       "Bash(npm uninstall:*)",
       "Bash(rm:*)",
-      "Bash(timeout 3 bash:*)"
+      "Bash(timeout 3 bash:*)",
+      "Bash(dir:*)"
     ],
     "deny": [],
     "ask": []

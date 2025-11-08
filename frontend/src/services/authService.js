@@ -10,12 +10,20 @@ const authService = {
 
   // Login
   login: async (email, password) => {
+    console.log('🌐 authService.login - Sending request for:', email);
     const response = await api.post('/auth/login', { email, password });
+    console.log('📡 Backend response:', {
+      success: response.data.success,
+      hasToken: !!response.data.token,
+      hasUser: !!response.data.user,
+      userRole: response.data.user?.role
+    });
     const { token, user } = response.data;
 
     // Store token and user in localStorage
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
+    console.log('💾 Stored in localStorage - user role:', user.role);
 
     return response.data;
   },

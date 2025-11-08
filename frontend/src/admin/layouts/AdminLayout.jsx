@@ -55,11 +55,6 @@ const AdminLayout = ({ children, activeTab, setActiveTab }) => {
       id: 'transactions',
       name: 'Transactions',
       icon: CreditCardIcon
-    },
-    {
-      id: 'settings',
-      name: 'Price Settings',
-      icon: CogIcon
     }
   ];
 

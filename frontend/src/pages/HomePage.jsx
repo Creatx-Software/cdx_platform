@@ -36,40 +36,70 @@ const HomePage = () => {
 
   const features = [
     {
-      icon: "🚀",
+      icon: (
+        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      ),
       title: "Instant Token Delivery",
       description: "Receive CDX tokens directly to your Solana wallet within minutes of payment confirmation.",
-      highlight: true
+      highlight: true,
+      color: "text-yellow-500"
     },
     {
-      icon: "💳",
+      icon: (
+        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        </svg>
+      ),
       title: "Credit Card Payments",
       description: "Purchase tokens with any major credit or debit card through our secure Stripe integration.",
-      highlight: false
+      highlight: false,
+      color: "text-blue-500"
     },
     {
-      icon: "🔒",
+      icon: (
+        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+        </svg>
+      ),
       title: "Bank-Level Security",
       description: "Your payments are protected by enterprise-grade encryption and security protocols.",
-      highlight: false
+      highlight: false,
+      color: "text-green-500"
     },
     {
-      icon: "⚡",
+      icon: (
+        <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
+        </svg>
+      ),
       title: "Solana Blockchain",
       description: "Built on Solana network for fast, low-cost transactions and superior performance.",
-      highlight: false
+      highlight: false,
+      color: "text-purple-500"
     },
     {
-      icon: "📊",
+      icon: (
+        <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
       title: "Real-Time Tracking",
       description: "Monitor your transactions and token balance with our comprehensive dashboard.",
-      highlight: false
+      highlight: false,
+      color: "text-cyan-500"
     },
     {
-      icon: "🛡️",
+      icon: (
+        <svg className="w-12 h-12" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+        </svg>
+      ),
       title: "Compliance Ready",
       description: "Fully compliant with financial regulations and cryptocurrency guidelines.",
-      highlight: false
+      highlight: false,
+      color: "text-emerald-500"
     }
   ];
 
@@ -225,9 +255,11 @@ const HomePage = () => {
             {features.map((feature, index) => (
               <div
                 key={index}
-                className={`${feature.highlight ? 'card-gold glow-gold' : 'card-premium'} p-8 hover-scale transition-all duration-300`}
+                className={`${feature.highlight ? 'card-gold glow-gold' : 'card-premium'} p-8 hover-scale transition-all duration-300 group`}
               >
-                <div className="text-4xl mb-4">{feature.icon}</div>
+                <div className={`${feature.color} mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                  {feature.icon}
+                </div>
                 <h3 className="title-card mb-3">{feature.title}</h3>
                 <p className="text-text-muted leading-relaxed">{feature.description}</p>
               </div>
@@ -289,31 +321,37 @@ const HomePage = () => {
 
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-                    <span className="text-primary-600 text-xl">🔐</span>
+                  <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-text-primary mb-2">256-bit SSL Encryption</h4>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-lg text-text-primary mb-2">256-bit SSL Encryption</h4>
                     <p className="text-text-muted">All data transmitted is encrypted using bank-level security protocols.</p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-                    <span className="text-primary-600 text-xl">🏦</span>
+                  <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M13.976 9.15c-2.172-.806-3.356-1.426-3.356-2.409 0-.831.683-1.305 1.901-1.305 1.315 0 2.088.53 2.364 1.435.03.09.091.14.164.14h1.02c.094 0 .17-.084.17-.184 0-.029-.007-.058-.021-.087-.339-1.185-1.376-2.035-2.855-2.124v-1.33c0-.09-.077-.171-.17-.171h-.984c-.093 0-.17.08-.17.17v1.32c-1.598.176-2.613 1.09-2.613 2.405 0 1.627 1.32 2.48 3.443 3.254 1.949.724 2.628 1.369 2.628 2.369 0 1-.854 1.604-2.284 1.604-1.647 0-2.528-.629-2.821-1.605-.028-.089-.091-.14-.164-.14h-1.02c-.093 0-.17.084-.17.184 0 .029.007.058.021.087.355 1.329 1.419 2.219 3.008 2.398v1.33c0 .09.077.171.17.171h.984c.094 0 .17-.08.17-.17v-1.32c1.598-.18 2.613-1.096 2.613-2.462 0-1.746-1.405-2.625-3.443-3.354z" />
+                    </svg>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-text-primary mb-2">Stripe Payment Processing</h4>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-lg text-text-primary mb-2">Stripe Payment Processing</h4>
                     <p className="text-text-muted">Payments processed through Stripe's secure and trusted infrastructure.</p>
                   </div>
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-primary-100 rounded-lg flex items-center justify-center">
-                    <span className="text-primary-600 text-xl">⚡</span>
+                  <div className="flex-shrink-0 w-14 h-14 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg className="w-7 h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z" />
+                    </svg>
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-text-primary mb-2">Solana Blockchain</h4>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-lg text-text-primary mb-2">Solana Blockchain</h4>
                     <p className="text-text-muted">Built on Solana's fast, secure, and decentralized blockchain network.</p>
                   </div>
                 </div>
@@ -321,20 +359,24 @@ const HomePage = () => {
             </div>
 
             <div className="relative">
-              <div className="card-premium p-8 text-center">
-                <div className="text-6xl mb-6">🛡️</div>
-                <h3 className="title-card mb-4">100% Secure Platform</h3>
-                <p className="text-text-muted mb-6">
+              <div className="card-gold p-10 text-center glow-gold">
+                <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-2xl flex items-center justify-center shadow-2xl">
+                  <svg className="w-14 h-14 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-bold text-text-primary mb-4">100% Secure Platform</h3>
+                <p className="text-text-muted mb-8 leading-relaxed">
                   Join thousands of users who trust our platform for secure cryptocurrency purchases.
                 </p>
-                <div className="grid grid-cols-2 gap-4 text-center">
-                  <div>
-                    <div className="font-bold text-2xl text-primary-600">99.9%</div>
-                    <div className="text-sm text-text-muted">Uptime</div>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="bg-white/50 rounded-xl p-4 backdrop-blur-sm">
+                    <div className="font-bold text-3xl text-primary-600 mb-1">99.9%</div>
+                    <div className="text-sm font-medium text-text-muted">Uptime</div>
                   </div>
-                  <div>
-                    <div className="font-bold text-2xl text-primary-600">24/7</div>
-                    <div className="text-sm text-text-muted">Monitoring</div>
+                  <div className="bg-white/50 rounded-xl p-4 backdrop-blur-sm">
+                    <div className="font-bold text-3xl text-primary-600 mb-1">24/7</div>
+                    <div className="text-sm font-medium text-text-muted">Monitoring</div>
                   </div>
                 </div>
               </div>
@@ -387,18 +429,25 @@ const HomePage = () => {
                 <span className="text-2xl font-bold text-primary-400">CDX</span>
                 <span className="ml-2 text-lg font-medium">Platform</span>
               </div>
-              <p className="text-gray-400 mb-4 leading-relaxed">
+              <p className="text-gray-400 mb-6 leading-relaxed">
                 The most secure and user-friendly platform for purchasing cryptocurrency tokens with credit cards.
               </p>
-              <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">
-                  <span className="text-xl">📧</span>
+              <div className="flex space-x-3">
+                <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-all duration-300 group">
+                  <svg className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                  </svg>
                 </a>
-                <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">
-                  <span className="text-xl">🐦</span>
+                <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-all duration-300 group">
+                  <svg className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                  </svg>
                 </a>
-                <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">
-                  <span className="text-xl">📱</span>
+                <a href="#" className="w-10 h-10 bg-gray-800 hover:bg-primary-600 rounded-lg flex items-center justify-center transition-all duration-300 group">
+                  <svg className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.18-.357.295-.6.295-.002 0-.003 0-.005 0l.213-3.054 5.56-5.022c.24-.213-.054-.334-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+                  </svg>
                 </a>
               </div>
             </div>
