@@ -169,6 +169,51 @@ const emailService = {
       logger.error('Failed to send purchase confirmation email:', error);
       return { success: false, error: error.message };
     }
+  },
+
+  // Send tokens fulfilled email (when admin manually sends tokens)
+  sendTokensFulfilledEmail: async (userEmail, userName, tokenSymbol, tokenAmount, walletAddress, txHash) => {
+    try {
+      const templatePath = path.join(__dirname, '../templates/tokensFulfilled.html');
+      let html = await fs.readFile(templatePath, 'utf-8');
+
+      // Dashboard URL
+      const dashboardUrl = `${process.env.FRONTEND_URL}/user/dashboard`;
+
+      // Format token amount
+      const formattedTokenAmount = parseFloat(tokenAmount).toLocaleString('en-US', { maximumFractionDigits: 2 });
+
+      // Transaction hash and explorer URL (if available)
+      const transactionHash = txHash || 'Provided by admin';
+      const explorerUrl = txHash ? `https://explorer.solana.com/tx/${txHash}` : '#';
+
+      // Replace all placeholders
+      html = html.replace(/{{userName}}/g, userName || 'Valued Customer');
+      html = html.replace(/{{tokenSymbol}}/g, tokenSymbol);
+      html = html.replace(/{{tokenAmount}}/g, formattedTokenAmount);
+      html = html.replace(/{{walletAddress}}/g, walletAddress);
+      html = html.replace(/{{transactionHash}}/g, transactionHash);
+      html = html.replace(/{{explorerUrl}}/g, explorerUrl);
+      html = html.replace(/{{dashboardUrl}}/g, dashboardUrl);
+
+      const subject = `Your ${tokenSymbol} Tokens Have Been Sent!`;
+
+      const result = await emailService.sendEmail(userEmail, subject, html);
+
+      // Log to database
+      await emailService.logEmail(
+        null,
+        userEmail,
+        'tokens_fulfilled',
+        subject,
+        result.success ? 'sent' : 'failed'
+      );
+
+      return result;
+    } catch (error) {
+      logger.error('Failed to send tokens fulfilled email:', error);
+      return { success: false, error: error.message };
+    }
   }
 };
 

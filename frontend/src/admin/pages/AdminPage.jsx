@@ -4,6 +4,8 @@ import Dashboard from '../components/Dashboard';
 import UserManagement from '../components/UserManagement';
 import TransactionList from '../components/TransactionList';
 import PriceSettings from '../components/PriceSettings';
+import FulfillmentManagement from '../components/FulfillmentManagement';
+import TokenManagement from '../components/TokenManagement';
 
 const AdminPage = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -12,6 +14,8 @@ const AdminPage = () => {
     dashboard: Dashboard,
     users: UserManagement,
     transactions: TransactionList,
+    fulfillments: FulfillmentManagement,
+    tokens: TokenManagement,
     settings: PriceSettings
   };
 

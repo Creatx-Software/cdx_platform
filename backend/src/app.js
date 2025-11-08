@@ -103,37 +103,13 @@ app.get('/test/database', async (req, res) => {
   }
 });
 
-// Test Solana connection endpoint
-app.get('/test/solana', async (req, res) => {
-  try {
-    const solanaService = require('./services/solanaService');
-
-    // Test treasury balance
-    const treasuryBalance = await solanaService.getTreasuryBalance();
-    const treasuryTokenBalance = await solanaService.getTreasuryTokenBalance();
-
-    res.json({
-      success: true,
-      message: 'Solana connection test',
-      treasuryBalance,
-      treasuryTokenBalance
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message,
-      message: 'Solana connection failed'
-    });
-  }
-});
-
 // Other routes (after body parsing)
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
 app.use('/payment', paymentRoutes);
 app.use('/admin', adminRoutes);
 app.use('/transactions', transactionRoutes);
-app.use('/token', tokenRoutes);
+app.use('/tokens', tokenRoutes);
 app.use('/price-history', priceHistoryRoutes);
 
 // 404 handler

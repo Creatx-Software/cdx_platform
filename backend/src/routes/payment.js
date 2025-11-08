@@ -8,6 +8,9 @@ router.get('/test', (req, res) => {
   res.json({ success: true, message: 'Payment routes are working!' });
 });
 
+// Get available tokens (public - no auth)
+router.get('/available-tokens', paymentController.getAvailableTokens);
+
 // All other payment routes require authentication
 router.use(authenticate);
 
@@ -19,9 +22,6 @@ router.post('/confirm', paymentController.confirmPayment);
 
 // Get payment history
 router.get('/history', paymentController.getPaymentHistory);
-
-// Get token price and configuration
-router.get('/token-price', paymentController.getTokenPrice);
 
 // Get transaction details
 router.get('/transaction/:transactionId', paymentController.getTransactionDetails);

@@ -14,7 +14,7 @@ const webhookController = {
       bodySize: req.body?.length
     });
 
-    
+
     try {
       const signature = req.headers['stripe-signature'];
       const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -141,74 +141,42 @@ const handlePaymentSucceeded = async (paymentIntent) => {
       return null;
     }
 
-    // Update transaction status to completed
-    const updated = await Transaction.updateTransactionStatus(
+    // Update payment status to succeeded (NOT fulfillment status - that's manual)
+    const updated = await Transaction.updatePaymentStatus(
       transaction.id,
-      'processing',
+      'succeeded',
       {
-        stripePaymentStatus: 'succeeded'
+        stripeCustomerId: paymentIntent.customer,
+        paymentMethod: paymentIntent.payment_method
       }
     );
 
     if (updated) {
-      logger.info(`Transaction ${transaction.id} marked as processing for token distribution`);
+      logger.info(`Transaction ${transaction.id} payment marked as succeeded. Awaiting admin fulfillment.`);
 
       // Send purchase confirmation email
       try {
         const emailService = require('../services/emailService');
-        const transactionWithUser = await Transaction.getTransactionWithUser(transaction.id);
+        const transactionDetails = await Transaction.findTransactionById(transaction.id);
 
-        if (transactionWithUser) {
+        if (transactionDetails) {
           await emailService.sendPurchaseConfirmationEmail(
-            transactionWithUser.email,
-            transactionWithUser.first_name,
-            transactionWithUser
+            transactionDetails.user_email,
+            transactionDetails.first_name,
+            transactionDetails
           );
-          logger.info(`Purchase confirmation email sent to ${transactionWithUser.email} for transaction ${transaction.id}`);
+          logger.info(`Purchase confirmation email sent to ${transactionDetails.user_email} for transaction ${transaction.id}`);
         } else {
-          logger.error(`Failed to get transaction with user data for email: ${transaction.id}`);
+          logger.error(`Failed to get transaction details for email: ${transaction.id}`);
         }
       } catch (emailError) {
         // Log error but don't fail the transaction
         logger.error(`Failed to send purchase confirmation email for transaction ${transaction.id}:`, emailError);
       }
 
-      // Trigger real Solana token distribution
-      setTimeout(async () => {
-        try {
-          const solanaService = require('../services/solanaService');
-
-          logger.info(`Starting token distribution for transaction ${transaction.id}`);
-          logger.info(`Starting token transfer: ${transaction.token_amount} CDX to ${transaction.recipient_wallet_address}`);
-
-          // Send tokens to user's wallet
-          const tokenResult = await solanaService.sendTokens(
-            transaction.recipient_wallet_address,
-            transaction.token_amount,
-            transaction.id
-          );
-
-          if (tokenResult.success) {
-            // Update transaction with Solana signature
-            await Transaction.completeTransaction(transaction.id, tokenResult.signature);
-            logger.info(`Token distribution completed for transaction ${transaction.id}, signature: ${tokenResult.signature}`);
-          } else {
-            // Mark transaction as failed
-            await Transaction.failTransaction(
-              transaction.id,
-              `Token distribution failed: ${tokenResult.error}`
-            );
-            logger.error(`Token distribution failed for transaction ${transaction.id}: ${tokenResult.error}`);
-          }
-
-        } catch (error) {
-          logger.error(`Token distribution error for transaction ${transaction.id}:`, error);
-          await Transaction.failTransaction(
-            transaction.id,
-            'Token distribution failed: ' + error.message
-          );
-        }
-      }, 1000); // 1 second delay to allow payment to settle
+      // NOTE: Tokens are NOT sent automatically
+      // Admin must manually fulfill the order from the admin dashboard
+      logger.info(`Transaction ${transaction.id} is now pending manual fulfillment by admin`);
 
     } else {
       logger.error(`Failed to update transaction ${transaction.id}`);
@@ -240,10 +208,16 @@ const handlePaymentFailed = async (paymentIntent) => {
       ? paymentIntent.last_payment_error.message
       : 'Payment failed';
 
-    // Update transaction status to failed
-    await Transaction.failTransaction(transaction.id, failureReason);
+    // Update payment status to failed
+    await Transaction.updatePaymentStatus(
+      transaction.id,
+      'failed',
+      {
+        errorMessage: failureReason
+      }
+    );
 
-    logger.info(`Transaction ${transaction.id} marked as failed: ${failureReason}`);
+    logger.info(`Transaction ${transaction.id} payment marked as failed: ${failureReason}`);
 
     return transaction.id;
 
@@ -266,8 +240,17 @@ const handlePaymentCanceled = async (paymentIntent) => {
       return null;
     }
 
-    // Update transaction status to failed
-    await Transaction.failTransaction(transaction.id, 'Payment was canceled');
+    // Update payment status to cancelled
+    await Transaction.updatePaymentStatus(
+      transaction.id,
+      'cancelled',
+      {
+        errorMessage: 'Payment was canceled by user'
+      }
+    );
+
+    // Also cancel fulfillment
+    await Transaction.cancelTransaction(transaction.id, 'Payment was canceled');
 
     logger.info(`Transaction ${transaction.id} marked as canceled`);
 
@@ -292,16 +275,8 @@ const handlePaymentRequiresAction = async (paymentIntent) => {
       return null;
     }
 
-    // Update transaction with additional action required
-    await Transaction.updateTransactionStatus(
-      transaction.id,
-      'requires_action',
-      {
-        stripePaymentStatus: 'requires_action'
-      }
-    );
-
-    logger.info(`Transaction ${transaction.id} requires additional action`);
+    // Keep payment status as pending since action is required
+    logger.info(`Transaction ${transaction.id} requires additional payment action`);
 
     return transaction.id;
 

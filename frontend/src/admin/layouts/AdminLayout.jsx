@@ -9,7 +9,9 @@ import {
   ChartBarIcon,
   Bars3Icon,
   XMarkIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  CheckCircleIcon,
+  CurrencyDollarIcon
 } from '@heroicons/react/24/outline';
 
 const AdminLayout = ({ children, activeTab, setActiveTab }) => {
@@ -31,6 +33,18 @@ const AdminLayout = ({ children, activeTab, setActiveTab }) => {
       id: 'dashboard',
       name: 'Dashboard',
       icon: HomeIcon
+    },
+    {
+      id: 'fulfillments',
+      name: 'Fulfillment Management',
+      icon: CheckCircleIcon,
+      badge: 'New'
+    },
+    {
+      id: 'tokens',
+      name: 'Token Management',
+      icon: CurrencyDollarIcon,
+      badge: 'New'
     },
     {
       id: 'users',
@@ -63,8 +77,13 @@ const AdminLayout = ({ children, activeTab, setActiveTab }) => {
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0 flex flex-col`}>
         {/* Header */}
-        <div className="flex items-center justify-between h-16 px-6 bg-blue-600">
-          <h1 className="text-white text-lg font-semibold">CDX Admin</h1>
+        <div className="flex items-center justify-between h-16 px-6 bg-gradient-to-r from-blue-600 to-blue-700">
+          <div className="flex items-center">
+            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center mr-3">
+              <ChartBarIcon className="w-5 h-5 text-blue-600" />
+            </div>
+            <h1 className="text-white text-lg font-semibold">Admin Panel</h1>
+          </div>
           <button
             onClick={() => setSidebarOpen(false)}
             className="text-white lg:hidden"
@@ -83,14 +102,21 @@ const AdminLayout = ({ children, activeTab, setActiveTab }) => {
                   setActiveTab(item.id);
                   setSidebarOpen(false);
                 }}
-                className={`w-full flex items-center px-4 py-3 text-left rounded-lg transition-colors ${
+                className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-colors ${
                   activeTab === item.id
                     ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
                     : 'text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <item.icon className="w-5 h-5 mr-3" />
-                {item.name}
+                <div className="flex items-center">
+                  <item.icon className="w-5 h-5 mr-3" />
+                  {item.name}
+                </div>
+                {item.badge && (
+                  <span className="ml-auto px-2 py-0.5 text-xs font-semibold text-green-700 bg-green-100 rounded-full">
+                    {item.badge}
+                  </span>
+                )}
               </button>
             ))}
           </div>

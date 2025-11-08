@@ -1,9 +1,9 @@
 const User = require('./User');
 const Transaction = require('./Transaction');
-const TokenConfig = require('./TokenConfig');
+const Token = require('./Token');
 
 module.exports = {
   User,
   Transaction,
-  TokenConfig
+  Token
 };

@@ -1,7 +1,6 @@
 const { Transaction } = require('../models');
 const { query } = require('../config/database');
 const logger = require('../utils/logger');
-const solanaService = require('../services/solanaService');
 
 const transactionController = {
   // Get user's transaction history
@@ -15,26 +14,29 @@ const transactionController = {
       let queryParams = [userId];
       let countParams = [userId];
 
-      // Build SQL query
+      // Build SQL query with new schema
       let sql = `
         SELECT
-          id,
-          stripe_payment_intent_id,
-          amount_usd,
-          token_amount,
-          recipient_wallet_address,
-          status,
-          blockchain_status,
-          blockchain_confirmations,
-          solana_transaction_signature,
-          token_price_at_purchase,
-          failure_reason,
-          error_message,
-          created_at,
-          updated_at,
-          tokens_sent_at
-        FROM transactions
-        WHERE user_id = ?
+          t.id,
+          t.transaction_uuid,
+          t.stripe_payment_intent_id,
+          t.usd_amount,
+          t.token_amount,
+          t.recipient_wallet_address,
+          t.payment_status,
+          t.fulfillment_status,
+          t.price_per_token,
+          t.fulfillment_transaction_hash,
+          t.error_message,
+          t.created_at,
+          t.fulfilled_at,
+          t.completed_at,
+          tk.token_symbol,
+          tk.token_name,
+          tk.blockchain
+        FROM transactions t
+        JOIN tokens tk ON t.token_id = tk.id
+        WHERE t.user_id = ?
       `;
 
       let countSql = `
@@ -43,10 +45,10 @@ const transactionController = {
         WHERE user_id = ?
       `;
 
-      // Add status filter if specified
+      // Add status filter if specified (check payment_status)
       if (status !== 'all') {
-        sql += ' AND status = ?';
-        countSql += ' AND status = ?';
+        sql += ' AND t.payment_status = ?';
+        countSql += ' AND payment_status = ?';
         queryParams.push(status);
         countParams.push(status);
       }
@@ -63,14 +65,14 @@ const transactionController = {
       const total = countResult.total;
       const totalPages = Math.ceil(total / parseInt(limit));
 
-      // Calculate statistics
+      // Calculate statistics with new schema
       const [stats] = await query(`
         SELECT
           COUNT(*) as total_transactions,
-          SUM(CASE WHEN status = 'completed' THEN amount_usd ELSE 0 END) as total_spent,
-          SUM(CASE WHEN status = 'completed' THEN token_amount ELSE 0 END) as total_tokens,
-          COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,
-          COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_count
+          SUM(CASE WHEN payment_status = 'succeeded' THEN usd_amount ELSE 0 END) as total_spent,
+          SUM(CASE WHEN fulfillment_status = 'completed' THEN token_amount ELSE 0 END) as total_tokens,
+          COUNT(CASE WHEN payment_status = 'succeeded' AND fulfillment_status = 'pending' THEN 1 END) as pending_fulfillment_count,
+          COUNT(CASE WHEN payment_status = 'failed' THEN 1 END) as failed_count
         FROM transactions
         WHERE user_id = ?
       `, [userId]);
@@ -79,10 +81,9 @@ const transactionController = {
         success: true,
         transactions: transactions.map(tx => ({
           ...tx,
-          amount_usd: parseFloat(tx.amount_usd),
+          usd_amount: parseFloat(tx.usd_amount),
           token_amount: parseFloat(tx.token_amount),
-          token_price_at_purchase: parseFloat(tx.token_price_at_purchase),
-          blockchain_confirmations: parseInt(tx.blockchain_confirmations) || 0
+          price_per_token: parseFloat(tx.price_per_token)
         })),
         pagination: {
           current_page: parseInt(page),
@@ -111,9 +112,13 @@ const transactionController = {
           t.*,
           u.email,
           u.first_name,
-          u.last_name
+          u.last_name,
+          tk.token_symbol,
+          tk.token_name,
+          tk.blockchain
         FROM transactions t
         JOIN users u ON t.user_id = u.id
+        JOIN tokens tk ON t.token_id = tk.id
         WHERE t.id = ? AND t.user_id = ?
       `, [transactionId, userId]);
 
@@ -126,29 +131,13 @@ const transactionController = {
 
       const tx = transaction[0];
 
-      // Get Solana transaction status if signature exists
-      let solanaStatus = null;
-      if (tx.solana_transaction_signature) {
-        solanaStatus = await solanaService.getTransactionStatus(tx.solana_transaction_signature);
-      }
-
-      // Get token balance for user's wallet if transaction completed
-      let walletBalance = null;
-      if (tx.status === 'completed' && tx.recipient_wallet_address) {
-        const balanceResult = await solanaService.getTokenBalance(tx.recipient_wallet_address);
-        walletBalance = balanceResult.success ? balanceResult.balance : null;
-      }
-
       res.json({
         success: true,
         transaction: {
           ...tx,
-          amount_usd: parseFloat(tx.amount_usd),
+          usd_amount: parseFloat(tx.usd_amount),
           token_amount: parseFloat(tx.token_amount),
-          token_price_at_purchase: parseFloat(tx.token_price_at_purchase),
-          blockchain_confirmations: parseInt(tx.blockchain_confirmations) || 0,
-          solana_status: solanaStatus,
-          current_wallet_balance: walletBalance
+          price_per_token: parseFloat(tx.price_per_token)
         }
       });
 
@@ -158,94 +147,6 @@ const transactionController = {
     }
   },
 
-  // Retry failed transaction (re-attempt token distribution)
-  retryTransaction: async (req, res, next) => {
-    try {
-      const { transactionId } = req.params;
-      const userId = req.userId;
-
-      // Find transaction
-      const transaction = await Transaction.findTransactionById(transactionId);
-
-      if (!transaction) {
-        return res.status(404).json({
-          success: false,
-          error: 'Transaction not found'
-        });
-      }
-
-      // Verify ownership
-      if (transaction.user_id !== userId) {
-        return res.status(403).json({
-          success: false,
-          error: 'Access denied'
-        });
-      }
-
-      // Check if transaction can be retried
-      if (transaction.status !== 'failed') {
-        return res.status(400).json({
-          success: false,
-          error: 'Only failed transactions can be retried'
-        });
-      }
-
-      // Reset transaction status
-      await Transaction.updateTransactionStatus(transaction.id, 'processing');
-
-      // Attempt token distribution
-      try {
-        const tokenResult = await solanaService.sendTokens(
-          transaction.recipient_wallet_address,
-          transaction.token_amount,
-          transaction.id
-        );
-
-        if (tokenResult.success) {
-          // Update transaction as completed
-          await Transaction.completeTransaction(transaction.id, tokenResult.signature);
-
-          logger.info(`Transaction ${transaction.id} retry successful`);
-
-          res.json({
-            success: true,
-            message: 'Transaction retry successful',
-            transaction_signature: tokenResult.signature
-          });
-
-        } else {
-          // Mark as failed again
-          await Transaction.failTransaction(
-            transaction.id,
-            `Retry failed: ${tokenResult.error}`
-          );
-
-          res.status(500).json({
-            success: false,
-            error: `Retry failed: ${tokenResult.error}`
-          });
-        }
-
-      } catch (retryError) {
-        // Mark as failed
-        await Transaction.failTransaction(
-          transaction.id,
-          `Retry error: ${retryError.message}`
-        );
-
-        logger.error(`Transaction retry error for ${transaction.id}:`, retryError);
-
-        res.status(500).json({
-          success: false,
-          error: `Retry failed: ${retryError.message}`
-        });
-      }
-
-    } catch (error) {
-      logger.error('Retry transaction error:', error);
-      next(error);
-    }
-  },
 
   // Get transaction statistics for user
   getTransactionStats: async (req, res, next) => {
@@ -262,18 +163,18 @@ const transactionController = {
         dateClause = 'AND created_at >= DATE_SUB(NOW(), INTERVAL 90 DAY)';
       }
 
-      // Get overall statistics
+      // Get overall statistics with new schema
       const [overallStats] = await query(`
         SELECT
           COUNT(*) as total_transactions,
-          SUM(CASE WHEN status = 'completed' THEN amount_usd ELSE 0 END) as total_spent,
-          SUM(CASE WHEN status = 'completed' THEN token_amount ELSE 0 END) as total_tokens,
-          AVG(CASE WHEN status = 'completed' THEN amount_usd ELSE NULL END) as avg_transaction,
-          COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_count,
-          COUNT(CASE WHEN status = 'processing' THEN 1 END) as processing_count,
-          COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_count,
+          SUM(CASE WHEN payment_status = 'succeeded' THEN usd_amount ELSE 0 END) as total_spent,
+          SUM(CASE WHEN fulfillment_status = 'completed' THEN token_amount ELSE 0 END) as total_tokens,
+          AVG(CASE WHEN payment_status = 'succeeded' THEN usd_amount ELSE NULL END) as avg_transaction,
+          COUNT(CASE WHEN payment_status = 'succeeded' AND fulfillment_status = 'pending' THEN 1 END) as pending_fulfillment_count,
+          COUNT(CASE WHEN fulfillment_status = 'processing' THEN 1 END) as processing_count,
+          COUNT(CASE WHEN payment_status = 'failed' THEN 1 END) as failed_count,
           MIN(created_at) as first_transaction,
-          MAX(CASE WHEN status = 'completed' THEN created_at END) as last_successful
+          MAX(CASE WHEN fulfillment_status = 'completed' THEN created_at END) as last_successful
         FROM transactions
         WHERE user_id = ? ${dateClause}
       `, [userId]);
@@ -283,8 +184,8 @@ const transactionController = {
         SELECT
           DATE(created_at) as date,
           COUNT(*) as transaction_count,
-          SUM(CASE WHEN status = 'completed' THEN amount_usd ELSE 0 END) as daily_spent,
-          SUM(CASE WHEN status = 'completed' THEN token_amount ELSE 0 END) as daily_tokens
+          SUM(CASE WHEN payment_status = 'succeeded' THEN usd_amount ELSE 0 END) as daily_spent,
+          SUM(CASE WHEN fulfillment_status = 'completed' THEN token_amount ELSE 0 END) as daily_tokens
         FROM transactions
         WHERE user_id = ? ${dateClause}
         GROUP BY DATE(created_at)
@@ -292,15 +193,15 @@ const transactionController = {
         LIMIT 30
       `, [userId]);
 
-      // Get status breakdown
+      // Get status breakdown (combine payment and fulfillment status)
       const statusBreakdown = await query(`
         SELECT
-          status,
+          CONCAT(payment_status, '_', fulfillment_status) as status,
           COUNT(*) as count,
-          SUM(amount_usd) as total_amount
+          SUM(usd_amount) as total_amount
         FROM transactions
         WHERE user_id = ? ${dateClause}
-        GROUP BY status
+        GROUP BY payment_status, fulfillment_status
       `, [userId]);
 
       res.json({
@@ -351,26 +252,30 @@ const transactionController = {
 
       // Add status filter
       if (status !== 'all') {
-        whereClause += ' AND status = ?';
+        whereClause += ' AND t.payment_status = ?';
         params.push(status);
       }
 
       const transactions = await query(`
         SELECT
-          id,
-          stripe_payment_intent_id,
-          amount_usd,
-          token_amount,
-          recipient_wallet_address,
-          status,
-          blockchain_status,
-          solana_transaction_signature,
-          token_price_at_purchase,
-          created_at,
-          updated_at
-        FROM transactions
+          t.id,
+          t.transaction_uuid,
+          t.stripe_payment_intent_id,
+          t.usd_amount,
+          t.token_amount,
+          t.recipient_wallet_address,
+          t.payment_status,
+          t.fulfillment_status,
+          t.fulfillment_transaction_hash,
+          t.price_per_token,
+          t.created_at,
+          t.fulfilled_at,
+          tk.token_symbol,
+          tk.token_name
+        FROM transactions t
+        JOIN tokens tk ON t.token_id = tk.id
         WHERE ${whereClause}
-        ORDER BY created_at DESC
+        ORDER BY t.created_at DESC
       `, params);
 
       if (transactions.length === 0) {
@@ -383,30 +288,34 @@ const transactionController = {
       // Convert to CSV
       const headers = [
         'Transaction ID',
+        'UUID',
+        'Token',
         'Stripe Payment ID',
         'Amount (USD)',
         'Token Amount',
         'Wallet Address',
-        'Status',
-        'Blockchain Status',
-        'Solana Signature',
+        'Payment Status',
+        'Fulfillment Status',
+        'Fulfillment TX Hash',
         'Token Price',
         'Created At',
-        'Updated At'
+        'Fulfilled At'
       ].join(',');
 
       const rows = transactions.map(tx => [
         tx.id,
+        tx.transaction_uuid,
+        tx.token_symbol,
         tx.stripe_payment_intent_id || '',
-        tx.amount_usd,
+        tx.usd_amount,
         tx.token_amount,
         tx.recipient_wallet_address || '',
-        tx.status,
-        tx.blockchain_status || '',
-        tx.solana_transaction_signature || '',
-        tx.token_price_at_purchase,
+        tx.payment_status,
+        tx.fulfillment_status,
+        tx.fulfillment_transaction_hash || '',
+        tx.price_per_token,
         tx.created_at,
-        tx.updated_at
+        tx.fulfilled_at || ''
       ].map(field => `"${field}"`).join(','));
 
       const csv = [headers, ...rows].join('\n');

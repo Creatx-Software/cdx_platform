@@ -1,5 +1,10 @@
 const { body, param, query, validationResult } = require('express-validator');
-const { isValidSolanaAddress } = require('../services/solanaService');
+
+// Simple wallet address validation (basic format check)
+const isValidWalletAddress = (address) => {
+  // Basic validation: alphanumeric, 32-44 characters (covers most blockchain addresses)
+  return typeof address === 'string' && /^[A-Za-z0-9]{32,44}$/.test(address);
+};
 
 // Validation error handler
 const handleValidationErrors = (req, res, next) => {
@@ -42,10 +47,11 @@ const validateResetPassword = [
 
 // Payment validations
 const validatePaymentIntent = [
+  body('tokenId').isInt({ min: 1 }).withMessage('Token ID is required'),
   body('usdAmount').isFloat({ min: 10, max: 10000 }).withMessage('Amount must be between $10 and $10,000'),
   body('walletAddress').custom(address => {
-    if (!isValidSolanaAddress(address)) {
-      throw new Error('Invalid Solana wallet address');
+    if (!isValidWalletAddress(address)) {
+      throw new Error('Invalid wallet address format');
     }
     return true;
   }),
@@ -71,8 +77,8 @@ const validateUpdateProfile = [
   body('first_name').optional().trim().isLength({ min: 1 }).withMessage('First name cannot be empty'),
   body('last_name').optional().trim().isLength({ min: 1 }).withMessage('Last name cannot be empty'),
   body('wallet_address').optional().custom(address => {
-    if (address && !isValidSolanaAddress(address)) {
-      throw new Error('Invalid Solana wallet address');
+    if (address && !isValidWalletAddress(address)) {
+      throw new Error('Invalid wallet address format');
     }
     return true;
   }),
@@ -112,8 +118,8 @@ const validateUserId = [
 
 const validateWalletAddress = [
   param('wallet_address').custom(address => {
-    if (!isValidSolanaAddress(address)) {
-      throw new Error('Invalid Solana wallet address');
+    if (!isValidWalletAddress(address)) {
+      throw new Error('Invalid wallet address format');
     }
     return true;
   }),

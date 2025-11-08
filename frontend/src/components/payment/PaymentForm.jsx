@@ -35,6 +35,8 @@ export const PaymentForm = ({
   amount,
   tokenAmount,
   walletAddress,
+  tokenId,
+  selectedToken,
   onSuccess,
   onError,
   isLoading: parentLoading = false
@@ -53,7 +55,7 @@ export const PaymentForm = ({
     }
 
     if (!walletAddress) {
-      setError('Please enter a valid Solana wallet address.');
+      setError('Please enter a valid wallet address.');
       return;
     }
 
@@ -85,8 +87,8 @@ export const PaymentForm = ({
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
+          tokenId: tokenId,
           usdAmount: amount,
-          tokenAmount,
           walletAddress,
         }),
       });
@@ -159,7 +161,7 @@ export const PaymentForm = ({
             <span className="font-bold text-gradient text-xl">${amount?.toFixed(2) || '0.00'}</span>
           </div>
           <div className="flex justify-between items-center py-2 border-b border-primary-200">
-            <span className="text-text-muted">CDX Tokens:</span>
+            <span className="text-text-muted">{selectedToken?.token_symbol || 'Tokens'}:</span>
             <span className="font-bold text-gradient text-xl">{tokenAmount?.toLocaleString() || '0'}</span>
           </div>
           <div className="flex justify-between items-center py-2">
@@ -230,7 +232,7 @@ export const PaymentForm = ({
       {/* Payment Security Notice */}
       <p className="text-xs text-gray-500 text-center">
         🔒 Your payment information is encrypted and secure.
-        Tokens will be delivered to your Solana wallet upon successful payment.
+        Tokens will be manually sent to your wallet by admin after payment confirmation.
       </p>
     </form>
   );

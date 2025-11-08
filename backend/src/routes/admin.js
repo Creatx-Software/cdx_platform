@@ -20,11 +20,10 @@ router.get('/transactions', adminController.getTransactions);
 router.post('/transactions/:transactionId/retry', adminController.retryTransaction);
 router.get('/transactions/export', adminController.exportTransactions);
 
-// Token configuration routes
-router.get('/token-config', adminController.getTokenConfig);
-router.put('/token-config', adminController.updateTokenConfig);
-
-// Utility routes
-router.get('/wallet-balance/:wallet_address', adminController.getWalletTokenBalance);
+// Fulfillment management routes
+router.get('/fulfillments/pending', adminController.getPendingFulfillments);
+router.post('/fulfillments/:id/fulfill', adminController.fulfillTransaction);
+router.put('/fulfillments/:id/status', adminController.updateFulfillmentStatus);
+router.get('/fulfillments/stats', adminController.getFulfillmentStats);
 
 module.exports = router;

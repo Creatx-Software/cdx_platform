@@ -18,7 +18,4 @@ router.get('/export', transactionController.exportTransactions);
 // Get specific transaction details
 router.get('/:transactionId', transactionController.getTransactionDetails);
 
-// Retry failed transaction
-router.post('/:transactionId/retry', transactionController.retryTransaction);
-
 module.exports = router;

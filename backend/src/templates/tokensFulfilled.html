@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tokens Sent - CDX Exchange</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f4f4f4;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); border-radius: 8px 8px 0 0;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold;">CDX Exchange</h1>
+            </td>
+          </tr>
+
+          <!-- Success Icon -->
+          <tr>
+            <td style="padding: 30px 40px 20px; text-align: center;">
+              <div style="width: 80px; height: 80px; margin: 0 auto; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 6L9 17L4 12" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <h2 style="margin: 20px 0 10px; color: #333333; font-size: 28px;">Tokens Sent Successfully!</h2>
+              <p style="margin: 0; color: #666666; font-size: 16px;">Your {{tokenSymbol}} tokens are now in your wallet</p>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 20px 40px 40px;">
+              <p style="margin: 0 0 20px; color: #666666; font-size: 16px; line-height: 1.6;">
+                Hi {{userName}},
+              </p>
+
+              <p style="margin: 0 0 15px; color: #666666; font-size: 16px; line-height: 1.6;">
+                <strong style="color: #059669; font-size: 17px;">✓ Your order has been completed!</strong>
+              </p>
+
+              <p style="margin: 0 0 30px; color: #666666; font-size: 16px; line-height: 1.6;">
+                We have successfully sent your {{tokenSymbol}} tokens to your wallet address. The tokens should now be visible in your wallet.
+              </p>
+
+              <!-- Transaction Details Box -->
+              <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 8px; padding: 25px; margin-bottom: 30px; border-left: 4px solid #10b981;">
+                <h3 style="margin: 0 0 20px; color: #065f46; font-size: 18px;">Order Details</h3>
+
+                <table width="100%" cellspacing="0" cellpadding="8" border="0">
+                  <tr>
+                    <td style="color: #047857; font-size: 14px; font-weight: 600; padding: 8px 0;">Token:</td>
+                    <td style="color: #065f46; font-size: 16px; font-weight: bold; text-align: right; padding: 8px 0;">{{tokenSymbol}}</td>
+                  </tr>
+                  <tr>
+                    <td style="color: #047857; font-size: 14px; font-weight: 600; padding: 8px 0;">Amount:</td>
+                    <td style="color: #065f46; font-size: 16px; font-weight: bold; text-align: right; padding: 8px 0;">{{tokenAmount}} {{tokenSymbol}}</td>
+                  </tr>
+                  <tr>
+                    <td style="color: #047857; font-size: 14px; font-weight: 600; padding: 8px 0;">Sent To:</td>
+                    <td style="color: #065f46; font-size: 11px; text-align: right; padding: 8px 0; word-break: break-all; font-family: monospace;">{{walletAddress}}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <!-- Blockchain Transaction -->
+              <div style="background-color: #d1fae5; border-radius: 8px; padding: 20px; margin-bottom: 30px; border-left: 4px solid #10b981;">
+                <p style="margin: 0 0 10px; color: #065f46; font-size: 14px; line-height: 1.6;">
+                  <strong style="color: #065f46;">🔗 Blockchain Transaction</strong>
+                </p>
+                <p style="margin: 0 0 10px; color: #047857; font-size: 14px; line-height: 1.6;">
+                  Your tokens have been transferred on the blockchain. You can verify this transaction using the hash below:
+                </p>
+                <p style="margin: 0 0 10px; color: #666666; font-size: 13px; line-height: 1.6;">
+                  <strong>Transaction Hash:</strong>
+                </p>
+                <p style="margin: 0; color: #10b981; font-size: 12px; word-break: break-all; font-family: monospace; background-color: #ffffff; padding: 10px; border-radius: 4px;">
+                  {{transactionHash}}
+                </p>
+                <p style="margin: 15px 0 0; text-align: center;">
+                  <a href="{{explorerUrl}}" style="display: inline-block; padding: 10px 20px; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: #ffffff; text-decoration: none; border-radius: 4px; font-size: 14px; font-weight: bold;">View on Explorer</a>
+                </p>
+              </div>
+
+              <!-- Call to Action -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="text-align: center; padding: 20px 0;">
+                    <a href="{{dashboardUrl}}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px; font-weight: bold; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);">View Dashboard</a>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 30px 0 0; color: #666666; font-size: 14px; line-height: 1.6;">
+                <strong>What's next?</strong><br>
+                Check your wallet to confirm the tokens have arrived. You can also view your complete transaction history in your dashboard.
+              </p>
+
+              <p style="margin: 20px 0 0; color: #999999; font-size: 14px; line-height: 1.6;">
+                If you don't see the tokens in your wallet, please make sure you're viewing the correct wallet address and network. If you have any questions, our support team is here to help.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 30px 40px; background-color: #f9f9f9; border-radius: 0 0 8px 8px; text-align: center;">
+              <p style="margin: 0 0 10px; color: #999999; font-size: 14px;">
+                Need help? Contact us at support@cdxexchange.com
+              </p>
+              <p style="margin: 0; color: #999999; font-size: 14px;">
+                © 2025 CDX Exchange. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

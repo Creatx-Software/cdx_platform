@@ -17,37 +17,43 @@ export const TokenPurchase = () => {
   const [tokenAmount, setTokenAmount] = useState(0);
   const [walletAddress, setWalletAddress] = useState('');
   const [isWalletValid, setIsWalletValid] = useState(false);
-  const [tokenPrice, setTokenPrice] = useState(0.5); // Default price
+  const [availableTokens, setAvailableTokens] = useState([]);
+  const [selectedToken, setSelectedToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [paymentResult, setPaymentResult] = useState(null);
 
-  // Fetch current token price
+  // Fetch available tokens
   useEffect(() => {
-    const fetchTokenPrice = async () => {
+    const fetchAvailableTokens = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/token/price`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/tokens`);
         if (response.ok) {
           const data = await response.json();
-          setTokenPrice(data.price);
+          setAvailableTokens(data.tokens || []);
+          // Auto-select first token if available
+          if (data.tokens && data.tokens.length > 0) {
+            setSelectedToken(data.tokens[0]);
+          }
         }
       } catch (err) {
-        console.error('Failed to fetch token price:', err);
+        console.error('Failed to fetch available tokens:', err);
+        setError('Failed to load available tokens. Please refresh the page.');
       }
     };
 
-    fetchTokenPrice();
+    fetchAvailableTokens();
   }, []);
 
-  // Calculate token amount based on USD amount
+  // Calculate token amount based on USD amount and selected token price
   useEffect(() => {
     const amount = parseFloat(usdAmount);
-    if (!isNaN(amount) && amount > 0 && tokenPrice > 0) {
-      setTokenAmount(Math.floor(amount / tokenPrice));
+    if (!isNaN(amount) && amount > 0 && selectedToken && selectedToken.current_price > 0) {
+      setTokenAmount(Math.floor(amount / selectedToken.current_price));
     } else {
       setTokenAmount(0);
     }
-  }, [usdAmount, tokenPrice]);
+  }, [usdAmount, selectedToken]);
 
   const handleWalletChange = (address, isValid) => {
     setWalletAddress(address);
@@ -60,13 +66,19 @@ export const TokenPurchase = () => {
   };
 
   const handleProceedToPayment = () => {
-    if (!isWalletValid) {
-      setError('Please enter a valid Solana wallet address');
+    if (!selectedToken) {
+      setError('Please select a token to purchase');
       return;
     }
 
-    if (!usdAmount || parseFloat(usdAmount) < 10) {
-      setError('Minimum purchase amount is $10');
+    if (!isWalletValid) {
+      setError('Please enter a valid wallet address');
+      return;
+    }
+
+    const minAmount = selectedToken.min_purchase_amount || 10;
+    if (!usdAmount || parseFloat(usdAmount) < minAmount) {
+      setError(`Minimum purchase amount for ${selectedToken.token_symbol} is $${minAmount}`);
       return;
     }
 
@@ -97,6 +109,18 @@ export const TokenPurchase = () => {
     setIsWalletValid(false);
     setError('');
     setPaymentResult(null);
+    // Keep selected token as is
+  };
+
+  const handleTokenSelect = (token) => {
+    setSelectedToken(token);
+    // Recalculate token amount when token changes
+    if (usdAmount) {
+      const amount = parseFloat(usdAmount);
+      if (!isNaN(amount) && amount > 0 && token.current_price > 0) {
+        setTokenAmount(Math.floor(amount / token.current_price));
+      }
+    }
   };
 
   // Step 1: Configuration
@@ -106,25 +130,60 @@ export const TokenPurchase = () => {
         <div className="card-premium p-8">
           <div className="mb-8 text-center">
             <h2 className="title-section mb-3">
-              <span className="text-gradient">Purchase CDX Tokens</span>
+              <span className="text-gradient">Purchase Tokens</span>
             </h2>
             <p className="subtitle">
-              Buy CDX tokens with your credit card and receive them instantly on Solana blockchain
+              Buy cryptocurrency tokens with your credit card securely
             </p>
           </div>
 
-          {/* Current Price Display */}
-          <div className="card-gold p-6 mb-8 transform hover-scale">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-gradient-to-r from-primary-400 to-primary-600 rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-text-primary">Live Price:</span>
+          {/* Token Selection */}
+          <div className="form-group mb-6">
+            <label className="form-label">
+              Select Token <span className="text-accent-error">*</span>
+            </label>
+            {availableTokens.length === 0 ? (
+              <div className="text-center py-4">
+                <Loader />
+                <p className="text-sm text-text-muted mt-2">Loading available tokens...</p>
               </div>
-              <div className="text-right">
-                <span className="text-2xl font-bold text-gradient">${tokenPrice.toFixed(3)}</span>
-                <span className="text-sm text-text-muted ml-1">per CDX</span>
+            ) : (
+              <div className="grid grid-cols-1 gap-3">
+                {availableTokens.map((token) => (
+                  <button
+                    key={token.id}
+                    type="button"
+                    onClick={() => handleTokenSelect(token)}
+                    className={`card-gold p-4 text-left transform transition-all duration-200 ${
+                      selectedToken?.id === token.id
+                        ? 'ring-2 ring-primary-500 shadow-premium scale-105'
+                        : 'hover:shadow-card-hover hover:scale-102'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-lg font-bold text-text-primary">{token.token_symbol}</span>
+                          <span className="text-xs px-2 py-1 bg-primary-100 text-primary-700 rounded-full font-medium">
+                            {token.blockchain}
+                          </span>
+                        </div>
+                        <p className="text-sm text-text-muted">{token.token_name}</p>
+                      </div>
+                      <div className="text-right ml-4">
+                        <div className="text-xl font-bold text-gradient">
+                          ${parseFloat(token.current_price).toFixed(3)}
+                        </div>
+                        <div className="text-xs text-text-muted">per token</div>
+                      </div>
+                    </div>
+                    {token.description && (
+                      <p className="text-xs text-text-muted mt-2">{token.description}</p>
+                    )}
+                  </button>
+                ))}
               </div>
-            </div>
+            )}
           </div>
 
           {/* Amount Input */}
@@ -145,13 +204,13 @@ export const TokenPurchase = () => {
                   className="pl-8 text-right text-lg font-medium"
                 />
               </div>
-              {tokenAmount > 0 && (
+              {tokenAmount > 0 && selectedToken && (
                 <div className="mt-3 p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg border border-primary-200">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-text-muted">You will receive:</span>
                     <div className="text-right">
                       <span className="text-lg font-bold text-gradient">{tokenAmount.toLocaleString()}</span>
-                      <span className="text-sm text-text-muted ml-1">CDX tokens</span>
+                      <span className="text-sm text-text-muted ml-1">{selectedToken.token_symbol} tokens</span>
                     </div>
                   </div>
                 </div>
@@ -186,7 +245,7 @@ export const TokenPurchase = () => {
             {/* Continue Button */}
             <Button
               onClick={handleProceedToPayment}
-              disabled={!isWalletValid || !usdAmount || parseFloat(usdAmount) < 10}
+              disabled={!selectedToken || !isWalletValid || !usdAmount || parseFloat(usdAmount) < (selectedToken?.min_purchase_amount || 10)}
               className="btn-primary w-full py-4 text-lg font-medium transform hover-scale"
             >
               <span className="flex items-center justify-center">
@@ -203,11 +262,13 @@ export const TokenPurchase = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
               <div className="flex items-center justify-center space-x-2">
                 <div className="w-2 h-2 bg-accent-success rounded-full"></div>
-                <span className="text-xs text-text-muted">Min: $10</span>
+                <span className="text-xs text-text-muted">
+                  Min: ${selectedToken?.min_purchase_amount || 10}
+                </span>
               </div>
               <div className="flex items-center justify-center space-x-2">
-                <div className="w-2 h-2 bg-accent-success rounded-full"></div>
-                <span className="text-xs text-text-muted">Instant delivery</span>
+                <div className="w-2 h-2 bg-accent-warning rounded-full"></div>
+                <span className="text-xs text-text-muted">Manual fulfillment</span>
               </div>
               <div className="flex items-center justify-center space-x-2">
                 <div className="w-2 h-2 bg-accent-success rounded-full"></div>
@@ -249,6 +310,8 @@ export const TokenPurchase = () => {
               amount={parseFloat(usdAmount)}
               tokenAmount={tokenAmount}
               walletAddress={walletAddress}
+              tokenId={selectedToken?.id}
+              selectedToken={selectedToken}
               onSuccess={handlePaymentSuccess}
               onError={handlePaymentError}
               isLoading={loading}
@@ -275,7 +338,9 @@ export const TokenPurchase = () => {
             <h2 className="title-section mb-3">
               <span className="text-gradient">Payment Successful!</span>
             </h2>
-            <p className="subtitle mb-8">Your CDX tokens are being delivered to your Solana wallet</p>
+            <p className="subtitle mb-8">
+              Your order has been received. Admin will manually send your {selectedToken?.token_symbol || 'tokens'} shortly and you'll receive an email notification.
+            </p>
 
             {/* Transaction Details */}
             <div className="card-gold p-6 mb-8 text-left">
@@ -291,7 +356,7 @@ export const TokenPurchase = () => {
                   <span className="font-bold text-gradient text-xl">${parseFloat(usdAmount).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-primary-200">
-                  <span className="text-text-muted">CDX Tokens:</span>
+                  <span className="text-text-muted">{selectedToken?.token_symbol || 'Tokens'}:</span>
                   <span className="font-bold text-gradient text-xl">{tokenAmount.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-primary-200">
@@ -338,8 +403,8 @@ export const TokenPurchase = () => {
             {/* Status Info */}
             <div className="mt-8 p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg border border-primary-200">
               <div className="flex items-center justify-center text-sm text-text-muted">
-                <div className="w-2 h-2 bg-accent-success rounded-full animate-pulse mr-2"></div>
-                Tokens typically arrive within 1-2 minutes. Check your wallet for confirmation.
+                <div className="w-2 h-2 bg-accent-warning rounded-full animate-pulse mr-2"></div>
+                Your order is pending fulfillment. You'll receive an email when tokens are sent to your wallet.
               </div>
             </div>
           </div>

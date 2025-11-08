@@ -33,22 +33,22 @@ const PurchasePage = () => {
         <div className="relative container mx-auto px-4 py-16 text-center text-white">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-              Purchase <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300">CDX Tokens</span>
+              Purchase <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-orange-300">Cryptocurrency Tokens</span>
             </h1>
             <p className="text-xl md:text-2xl text-blue-100 mb-8 font-light leading-relaxed">
-              Buy CDX tokens securely with your credit card and receive them instantly on Solana blockchain
+              Buy cryptocurrency tokens securely with your credit card. Admin will manually send tokens to your wallet after payment.
             </p>
 
             {/* Stats Pills */}
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 border border-white/30">
-                <span className="text-sm font-medium">💳 Instant Purchase</span>
+                <span className="text-sm font-medium">💳 Secure Payment</span>
               </div>
               <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 border border-white/30">
                 <span className="text-sm font-medium">🔒 Bank-Level Security</span>
               </div>
               <div className="bg-white/20 backdrop-blur-sm rounded-full px-6 py-3 border border-white/30">
-                <span className="text-sm font-medium">⚡ Powered by Solana</span>
+                <span className="text-sm font-medium">⚡ Multi-Token Support</span>
               </div>
             </div>
           </div>
@@ -67,7 +67,7 @@ const PurchasePage = () => {
               How it works
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Purchase CDX tokens in three simple steps and start your decentralized journey
+              Purchase cryptocurrency tokens in three simple steps
             </p>
           </div>
 
@@ -80,9 +80,9 @@ const PurchasePage = () => {
                     <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">1</span>
                   </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">Enter Details</h3>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">Select Token & Enter Details</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Enter the amount you want to spend and your Solana wallet address where you'll receive your tokens
+                  Choose your desired token, enter the amount you want to spend, and provide your wallet address
                 </p>
               </div>
               {/* Connector */}
@@ -116,7 +116,7 @@ const PurchasePage = () => {
                 </div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">Receive Tokens</h3>
                 <p className="text-gray-600 leading-relaxed">
-                  CDX tokens are automatically delivered to your Solana wallet within minutes of successful payment
+                  Admin will manually send tokens to your wallet after payment confirmation. You'll receive an email notification.
                 </p>
               </div>
             </div>
@@ -167,8 +167,8 @@ const PurchasePage = () => {
           <p className="text-sm text-gray-500 mb-4">Trusted by thousands of users worldwide</p>
           <div className="flex justify-center items-center space-x-8 opacity-50">
             <div className="text-2xl font-bold text-gray-400">Stripe</div>
-            <div className="text-2xl font-bold text-gray-400">Solana</div>
-            <div className="text-2xl font-bold text-gray-400">Web3</div>
+            <div className="text-2xl font-bold text-gray-400">Blockchain</div>
+            <div className="text-2xl font-bold text-gray-400">Crypto</div>
           </div>
         </div>
       </main>

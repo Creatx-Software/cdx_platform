@@ -1,8 +1,8 @@
-const { User, Transaction, TokenConfig } = require('../models');
+const { User, Transaction, Token } = require('../models');
 const { query } = require('../config/database');
 const logger = require('../utils/logger');
-const solanaService = require('../services/solanaService');
 const stripeService = require('../services/stripeService');
+const emailService = require('../services/emailService');
 
 const adminController = {
   // Get dashboard statistics
@@ -23,12 +23,12 @@ const adminController = {
       const [transactionStats] = await query(`
         SELECT
           COUNT(*) as total_transactions,
-          COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_transactions,
-          COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_transactions,
-          COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_transactions,
-          SUM(CASE WHEN status = 'completed' THEN amount_usd ELSE 0 END) as total_revenue,
-          SUM(CASE WHEN status = 'completed' THEN token_amount ELSE 0 END) as total_tokens_sold,
-          AVG(CASE WHEN status = 'completed' THEN amount_usd ELSE NULL END) as avg_transaction_amount
+          COUNT(CASE WHEN payment_status = 'succeeded' AND fulfillment_status = 'completed' THEN 1 END) as completed_transactions,
+          COUNT(CASE WHEN payment_status = 'succeeded' AND fulfillment_status = 'pending' THEN 1 END) as pending_fulfillments,
+          COUNT(CASE WHEN payment_status = 'failed' THEN 1 END) as failed_transactions,
+          SUM(CASE WHEN payment_status = 'succeeded' AND fulfillment_status = 'completed' THEN usd_amount ELSE 0 END) as total_revenue,
+          SUM(CASE WHEN payment_status = 'succeeded' AND fulfillment_status = 'completed' THEN token_amount ELSE 0 END) as total_tokens_sold,
+          AVG(CASE WHEN payment_status = 'succeeded' AND fulfillment_status = 'completed' THEN usd_amount ELSE NULL END) as avg_transaction_amount
         FROM transactions
       `);
 
@@ -36,7 +36,7 @@ const adminController = {
       const [todayStats] = await query(`
         SELECT
           COUNT(*) as today_transactions,
-          SUM(CASE WHEN status = 'completed' THEN amount_usd ELSE 0 END) as today_revenue,
+          SUM(CASE WHEN payment_status = 'succeeded' THEN usd_amount ELSE 0 END) as today_revenue,
           COUNT(DISTINCT user_id) as today_active_users
         FROM transactions
         WHERE DATE(created_at) = CURDATE()
@@ -46,37 +46,30 @@ const adminController = {
       const recentTransactions = await query(`
         SELECT
           t.id,
-          t.amount_usd,
+          t.transaction_uuid,
+          t.usd_amount,
           t.token_amount,
-          t.status,
+          t.payment_status,
+          t.fulfillment_status,
           t.created_at,
+          tk.token_symbol,
+          tk.token_name,
           u.email,
           u.first_name,
           u.last_name
         FROM transactions t
         JOIN users u ON t.user_id = u.id
+        JOIN tokens tk ON t.token_id = tk.id
         ORDER BY t.created_at DESC
         LIMIT 10
       `);
-
-      // Get treasury balances
-      const treasurySOL = await solanaService.getTreasuryBalance();
-      const treasuryTokens = await solanaService.getTreasuryTokenBalance();
-
-      // Get current token configuration
-      const tokenConfig = await TokenConfig.getActiveConfig();
 
       res.json({
         success: true,
         stats: {
           users: userStats,
           transactions: transactionStats,
-          today: todayStats,
-          treasury: {
-            sol_balance: treasurySOL.success ? treasurySOL.balance : 0,
-            token_balance: treasuryTokens.success ? treasuryTokens.balance : 0
-          },
-          token_config: tokenConfig
+          today: todayStats
         },
         recent_transactions: recentTransactions
       });
@@ -110,8 +103,8 @@ const adminController = {
           u.created_at,
           u.last_login_at,
           COALESCE(COUNT(t.id), 0) as transaction_count,
-          COALESCE(SUM(CASE WHEN t.status = 'completed' THEN t.amount_usd ELSE 0 END), 0) as total_spent,
-          COALESCE(SUM(CASE WHEN t.status = 'completed' THEN t.token_amount ELSE 0 END), 0) as total_tokens
+          COALESCE(SUM(CASE WHEN t.payment_status = 'succeeded' THEN t.usd_amount ELSE 0 END), 0) as total_spent,
+          COALESCE(SUM(CASE WHEN t.fulfillment_status = 'completed' THEN t.token_amount ELSE 0 END), 0) as total_tokens
         FROM users u
         LEFT JOIN transactions t ON u.id = t.user_id
       `;
@@ -202,7 +195,7 @@ const adminController = {
 
       // Add filtering
       if (status !== 'all') {
-        whereConditions.push('t.status = ?');
+        whereConditions.push('t.payment_status = ?');
         queryParams.push(status);
       }
 
@@ -263,111 +256,6 @@ const adminController = {
     }
   },
 
-  // Get current token configuration
-  getTokenConfig: async (req, res, next) => {
-    try {
-      const [config] = await query(`
-        SELECT
-          price_per_token as token_price,
-          min_purchase_amount as min_purchase_amount,
-          max_purchase_amount as max_purchase_amount,
-          daily_purchase_limit_per_user as daily_limit_usd,
-          is_active as is_sale_active,
-          created_at,
-          updated_at
-        FROM token_configuration
-        ORDER BY created_at DESC
-        LIMIT 1
-      `);
-
-      if (!config) {
-        return res.status(404).json({
-          success: false,
-          error: 'No active token configuration found'
-        });
-      }
-
-      // Add additional calculated fields
-      const enhancedConfig = {
-        ...config,
-        total_supply: 1000000, // From your initial mint
-        available_supply: 1000000 // This should be calculated from your treasury balance
-      };
-
-      res.json({
-        success: true,
-        config: enhancedConfig
-      });
-
-    } catch (error) {
-      logger.error('Get token config error:', error);
-      next(error);
-    }
-  },
-
-  // Update token configuration
-  updateTokenConfig: async (req, res, next) => {
-    try {
-      const {
-        token_price,
-        min_purchase_amount,
-        max_purchase_amount,
-        daily_limit_usd,
-        is_sale_active,
-        total_supply,
-        available_supply
-      } = req.body;
-
-      // Validate required fields
-      if (!token_price || token_price <= 0) {
-        return res.status(400).json({
-          success: false,
-          error: 'Valid token price is required'
-        });
-      }
-
-      // Deactivate current config
-      await query('UPDATE token_configuration SET is_active = FALSE');
-
-      // Create new config - map frontend names to database columns
-      const result = await query(`
-        INSERT INTO token_configuration (
-          price_per_token,
-          min_purchase_amount,
-          max_purchase_amount,
-          daily_purchase_limit_per_user,
-          is_active,
-          updated_by,
-          created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, NOW())
-      `, [
-        parseFloat(token_price),
-        parseFloat(min_purchase_amount) || 10,
-        parseFloat(max_purchase_amount) || 10000,
-        parseFloat(daily_limit_usd) || 5000,
-        is_sale_active !== false,
-        req.userId
-      ]);
-
-      logger.info(`Token configuration updated by admin ${req.userId}`, {
-        token_price,
-        min_purchase_amount,
-        max_purchase_amount,
-        daily_limit_usd,
-        is_sale_active
-      });
-
-      res.json({
-        success: true,
-        message: 'Token configuration updated successfully',
-        config_id: result.insertId
-      });
-
-    } catch (error) {
-      logger.error('Update token config error:', error);
-      next(error);
-    }
-  },
 
   // Get user details with transaction history
   getUserDetails: async (req, res, next) => {
@@ -395,9 +283,9 @@ const adminController = {
       const [stats] = await query(`
         SELECT
           COUNT(*) as total_transactions,
-          SUM(CASE WHEN status = 'completed' THEN amount_usd ELSE 0 END) as total_spent,
-          SUM(CASE WHEN status = 'completed' THEN token_amount ELSE 0 END) as total_tokens,
-          COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_transactions
+          SUM(CASE WHEN payment_status = 'succeeded' THEN usd_amount ELSE 0 END) as total_spent,
+          SUM(CASE WHEN fulfillment_status = 'completed' THEN token_amount ELSE 0 END) as total_tokens,
+          COUNT(CASE WHEN payment_status = 'failed' THEN 1 END) as failed_transactions
         FROM transactions
         WHERE user_id = ?
       `, [userId]);
@@ -430,7 +318,7 @@ const adminController = {
 
       // Find the transaction
       const [transaction] = await query(
-        'SELECT * FROM transactions WHERE id = ? AND status = "failed"',
+        'SELECT * FROM transactions WHERE id = ? AND payment_status = "failed"',
         [transactionId]
       );
 
@@ -443,7 +331,7 @@ const adminController = {
 
       // Reset the transaction status to pending for retry
       await query(
-        'UPDATE transactions SET status = "pending", retry_count = retry_count + 1 WHERE id = ?',
+        'UPDATE transactions SET payment_status = "pending" WHERE id = ?',
         [transactionId]
       );
 
@@ -476,7 +364,7 @@ const adminController = {
       let queryParams = [];
 
       if (status !== 'all') {
-        whereConditions.push('t.status = ?');
+        whereConditions.push('t.payment_status = ?');
         queryParams.push(status);
       }
 
@@ -514,17 +402,18 @@ const adminController = {
         SELECT
           t.id,
           t.transaction_uuid,
-          t.amount_usd,
+          t.usd_amount,
           t.token_amount,
-          t.token_price_at_purchase,
-          t.status,
+          t.price_per_token,
+          t.payment_status,
+          t.fulfillment_status,
           t.created_at,
           t.completed_at,
           u.email as user_email,
           u.first_name,
           u.last_name,
           t.stripe_payment_intent_id,
-          t.solana_transaction_signature
+          t.fulfillment_transaction_hash
         FROM transactions t
         JOIN users u ON t.user_id = u.id
         ${whereClause}
@@ -534,21 +423,22 @@ const adminController = {
       const transactions = await query(transactionQuery, queryParams);
 
       // Create CSV content
-      const csvHeader = 'ID,UUID,User Email,User Name,Amount USD,Tokens,Token Price,Status,Created,Completed,Stripe Payment ID,Solana Transaction\n';
+      const csvHeader = 'ID,UUID,User Email,User Name,Amount USD,Tokens,Token Price,Payment Status,Fulfillment Status,Created,Completed,Stripe Payment ID,Fulfillment TX Hash\n';
       const csvRows = transactions.map(t => {
         return [
           t.id,
           t.transaction_uuid,
           t.user_email,
           `"${t.first_name} ${t.last_name}"`,
-          t.amount_usd,
+          t.usd_amount,
           t.token_amount,
-          t.token_price_at_purchase,
-          t.status,
+          t.price_per_token,
+          t.payment_status,
+          t.fulfillment_status,
           t.created_at,
           t.completed_at || '',
           t.stripe_payment_intent_id || '',
-          t.solana_transaction_signature || ''
+          t.fulfillment_transaction_hash || ''
         ].join(',');
       }).join('\n');
 
@@ -564,29 +454,182 @@ const adminController = {
     }
   },
 
-  // Get wallet token balance
-  getWalletTokenBalance: async (req, res, next) => {
+  // Get pending fulfillments
+  getPendingFulfillments: async (req, res, next) => {
     try {
-      const { wallet_address } = req.params;
+      const { page = 1, limit = 50 } = req.query;
+      const offset = (parseInt(page) - 1) * parseInt(limit);
 
-      if (!solanaService.isValidSolanaAddress(wallet_address)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid Solana wallet address'
-        });
-      }
+      const transactions = await Transaction.getPendingFulfillments(
+        parseInt(limit),
+        offset
+      );
 
-      const balance = await solanaService.getTokenBalance(wallet_address);
+      // Get total count
+      const totalCount = await Transaction.getPendingFulfillmentsCount();
 
       res.json({
         success: true,
-        wallet_address,
-        balance: balance.success ? balance.balance : 0,
-        error: balance.success ? null : balance.error
+        transactions,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: totalCount,
+          total_pages: Math.ceil(totalCount / parseInt(limit))
+        }
+      });
+    } catch (error) {
+      logger.error('Get pending fulfillments error:', error);
+      next(error);
+    }
+  },
+
+  // Mark transaction as fulfilled
+  fulfillTransaction: async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { notes, transaction_hash } = req.body;
+      const adminId = req.userId;
+
+      // Get transaction details
+      const transaction = await Transaction.findTransactionById(id);
+
+      if (!transaction) {
+        return res.status(404).json({
+          success: false,
+          message: 'Transaction not found'
+        });
+      }
+
+      // Check if payment was successful
+      if (transaction.payment_status !== 'succeeded') {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot fulfill transaction - payment not successful'
+        });
+      }
+
+      // Check if already fulfilled
+      if (transaction.fulfillment_status === 'completed') {
+        return res.status(400).json({
+          success: false,
+          message: 'Transaction already fulfilled'
+        });
+      }
+
+      // Mark as fulfilled
+      const fulfilled = await Transaction.markAsFulfilled(
+        id,
+        adminId,
+        notes,
+        transaction_hash
+      );
+
+      if (!fulfilled) {
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to mark transaction as fulfilled'
+        });
+      }
+
+      // Send email notification to user
+      try {
+        await emailService.sendTokensFulfilledEmail(
+          transaction.user_email,
+          `${transaction.first_name} ${transaction.last_name}`,
+          transaction.token_symbol,
+          transaction.token_amount,
+          transaction.recipient_wallet_address,
+          transaction_hash
+        );
+      } catch (emailError) {
+        logger.error('Failed to send fulfillment email:', emailError);
+        // Don't fail the request if email fails
+      }
+
+      // Log admin action
+      logger.info(`Transaction ${id} fulfilled by admin ${adminId}`);
+
+      res.json({
+        success: true,
+        message: 'Transaction marked as fulfilled successfully'
+      });
+    } catch (error) {
+      logger.error('Fulfill transaction error:', error);
+      next(error);
+    }
+  },
+
+  // Update fulfillment status (processing, cancelled, etc.)
+  updateFulfillmentStatus: async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const { status, notes } = req.body;
+      const adminId = req.userId;
+
+      // Validate status
+      const validStatuses = ['pending', 'processing', 'completed', 'cancelled'];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+        });
+      }
+
+      // Get transaction
+      const transaction = await Transaction.findTransactionById(id);
+      if (!transaction) {
+        return res.status(404).json({
+          success: false,
+          message: 'Transaction not found'
+        });
+      }
+
+      // Update status
+      const updated = await Transaction.updateFulfillmentStatus(id, status, {
+        fulfilledBy: adminId,
+        notes
       });
 
+      if (!updated) {
+        return res.status(500).json({
+          success: false,
+          message: 'Failed to update fulfillment status'
+        });
+      }
+
+      logger.info(`Transaction ${id} fulfillment status updated to ${status} by admin ${adminId}`);
+
+      res.json({
+        success: true,
+        message: 'Fulfillment status updated successfully'
+      });
     } catch (error) {
-      logger.error('Get wallet token balance error:', error);
+      logger.error('Update fulfillment status error:', error);
+      next(error);
+    }
+  },
+
+  // Get fulfillment statistics
+  getFulfillmentStats: async (req, res, next) => {
+    try {
+      const stats = await query(`
+        SELECT
+          COUNT(CASE WHEN fulfillment_status = 'pending' AND payment_status = 'succeeded' THEN 1 END) as pending_count,
+          COUNT(CASE WHEN fulfillment_status = 'processing' THEN 1 END) as processing_count,
+          COUNT(CASE WHEN fulfillment_status = 'completed' THEN 1 END) as completed_count,
+          COUNT(CASE WHEN fulfillment_status = 'cancelled' THEN 1 END) as cancelled_count,
+          MIN(CASE WHEN fulfillment_status = 'pending' AND payment_status = 'succeeded' THEN created_at END) as oldest_pending,
+          AVG(CASE WHEN fulfillment_status = 'completed' THEN TIMESTAMPDIFF(HOUR, created_at, fulfilled_at) END) as avg_fulfillment_time_hours
+        FROM transactions
+      `);
+
+      res.json({
+        success: true,
+        stats: stats[0]
+      });
+    } catch (error) {
+      logger.error('Get fulfillment stats error:', error);
       next(error);
     }
   }

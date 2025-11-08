@@ -115,8 +115,15 @@ const TransactionHistory = () => {
     setSelectedTransactionId(null);
   };
 
-  const getStatusBadge = (status) => {
-    const statusClasses = {
+  const getStatusBadge = (paymentStatus, fulfillmentStatus) => {
+    const paymentStatusClasses = {
+      succeeded: 'bg-green-100 text-green-800',
+      pending: 'bg-yellow-100 text-yellow-800',
+      processing: 'bg-blue-100 text-blue-800',
+      failed: 'bg-red-100 text-red-800'
+    };
+
+    const fulfillmentStatusClasses = {
       completed: 'bg-green-100 text-green-800',
       pending: 'bg-yellow-100 text-yellow-800',
       processing: 'bg-blue-100 text-blue-800',
@@ -124,9 +131,14 @@ const TransactionHistory = () => {
     };
 
     return (
-      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${statusClasses[status] || 'bg-gray-100 text-gray-800'}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
+      <div className="flex flex-col space-y-1">
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${paymentStatusClasses[paymentStatus] || 'bg-gray-100 text-gray-800'}`}>
+          Payment: {paymentStatus?.charAt(0).toUpperCase() + paymentStatus?.slice(1)}
+        </span>
+        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${fulfillmentStatusClasses[fulfillmentStatus] || 'bg-gray-100 text-gray-800'}`}>
+          Fulfillment: {fulfillmentStatus?.charAt(0).toUpperCase() + fulfillmentStatus?.slice(1)}
+        </span>
+      </div>
     );
   };
 
@@ -167,7 +179,7 @@ const TransactionHistory = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Transaction History</h1>
           <p className="text-gray-600 mt-1">
-            View and manage all your CDX token purchases
+            View and manage all your token purchases
           </p>
         </div>
         <div className="flex space-x-2">
@@ -298,10 +310,10 @@ const TransactionHistory = () => {
                       Amount
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tokens
+                      Token / Amount
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
+                      Status (Payment / Fulfillment)
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
@@ -319,21 +331,24 @@ const TransactionHistory = () => {
                           <div className="font-mono text-sm font-medium text-gray-900">
                             #{transaction.id}
                           </div>
-                          {transaction.solana_transaction_signature && (
+                          {transaction.fulfillment_transaction_hash && (
                             <div className="text-xs text-gray-500">
-                              Solana: {transaction.solana_transaction_signature.slice(0, 8)}...
+                              TX: {transaction.fulfillment_transaction_hash.slice(0, 8)}...
                             </div>
                           )}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(transaction.amount_usd)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatNumber(transaction.token_amount)} CDX
+                        {formatCurrency(transaction.usd_amount || transaction.amount_usd)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {getStatusBadge(transaction.status)}
+                        <div className="text-sm text-gray-900">
+                          {formatNumber(transaction.token_amount)} {transaction.token_symbol || 'tokens'}
+                        </div>
+                        <div className="text-xs text-gray-500">{transaction.token_name}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {getStatusBadge(transaction.payment_status, transaction.fulfillment_status)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(transaction.created_at)}
@@ -366,16 +381,17 @@ const TransactionHistory = () => {
                         {formatDate(transaction.created_at)}
                       </p>
                     </div>
-                    {getStatusBadge(transaction.status)}
+                    {getStatusBadge(transaction.payment_status, transaction.fulfillment_status)}
                   </div>
                   <div className="grid grid-cols-2 gap-4 mt-3">
                     <div>
                       <p className="text-xs text-gray-500">Amount</p>
-                      <p className="font-semibold">{formatCurrency(transaction.amount_usd)}</p>
+                      <p className="font-semibold">{formatCurrency(transaction.usd_amount || transaction.amount_usd)}</p>
                     </div>
                     <div>
                       <p className="text-xs text-gray-500">Tokens</p>
-                      <p className="font-semibold">{formatNumber(transaction.token_amount)} CDX</p>
+                      <p className="font-semibold">{formatNumber(transaction.token_amount)} {transaction.token_symbol || 'tokens'}</p>
+                      <p className="text-xs text-gray-500">{transaction.token_name}</p>
                     </div>
                   </div>
                   <div className="mt-3">
